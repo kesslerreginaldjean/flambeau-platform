@@ -1,0 +1,265 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        String // admin, teacher, parent, student
+  status      String    @default("active")
+  phone       String?
+  address     String?
+  dateOfBirth DateTime?
+  gender      String? // M, F
+  image       String?
+  createdAt   DateTime  @default(now())
+
+  student Student?
+  teacher Teacher?
+  parent  Parent?
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model AcademicYear {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g., "2025-2026"
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+
+  enrollments Enrollment[]
+  grades      Grade[]
+  payments    Payment[]
+  attendance  Attendance[]
+  behaviors   Behavior[]
+  classes     Class[]
+}
+
+model Student {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  parentId       String?
+  parent         Parent?  @relation(fields: [parentId], references: [id])
+  studentNumber  String   @unique
+  enrollmentDate DateTime
+
+  enrollments Enrollment[]
+  grades      Grade[]
+  payments    Payment[]
+  attendance  Attendance[]
+  behaviors   Behavior[]
+  documents   Document[]
+}
+
+model Class {
+  id             String       @id @default(uuid())
+  name           String // e.g., "A", "B"
+  level          String // e.g., "NS1", "9ème AF"
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  teacherId      String? // Titulaire
+  teacher        Teacher?     @relation("ClassTitulaire", fields: [teacherId], references: [id])
+
+  enrollments Enrollment[]
+  subjects    ClassSubject[]
+  createdAt   DateTime       @default(now())
+
+  @@unique([name, level, academicYearId])
+}
+
+model Enrollment {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  classId        String
+  class          Class        @relation(fields: [classId], references: [id])
+  status         String       @default("enrolled") // enrolled, graduated, transferred
+  createdAt      DateTime     @default(now())
+
+  @@unique([studentId, academicYearId])
+}
+
+model Teacher {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  subject   String? // Spécialité principale
+  hiredDate DateTime @default(now())
+
+  classesTitulaire Class[]        @relation("ClassTitulaire")
+  assignedSubjects ClassSubject[]
+}
+
+model ClassSubject {
+  id        String  @id @default(uuid())
+  classId   String
+  class     Class   @relation(fields: [classId], references: [id])
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  subject   String // e.g., "Maths", "Physique"
+  periods   Int     @default(1) // Number of periods per week
+
+  @@unique([classId, subject])
+}
+
+model Parent {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id])
+  occupation String?
+  children   Student[]
+}
+
+model Grade {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  subject        String
+  score          Float
+  term           Int // 1, 2, 3
+  teacherName    String
+  date           DateTime     @default(now())
+  notes          String?
+}
+
+model Attendance {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  date           DateTime
+  status         String // present, absent, late
+  reason         String?
+  createdAt      DateTime     @default(now())
+}
+
+model Behavior {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  type           String // merit, warning, suspension, other
+  title          String
+  description    String
+  points         Int          @default(0)
+  date           DateTime     @default(now())
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  title     String
+  type      String // birth_certificate, report_card, identity_photo, medical
+  fileUrl   String
+  createdAt DateTime @default(now())
+}
+
+model Payment {
+  id             String       @id @default(uuid())
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  amount         Float
+  paymentType    String // tuition, exam, uniform, books, other
+  status         String       @default("pending") // pending, completed, partial
+  dueDate        DateTime
+  paidDate       DateTime?
+  notes          String?
+  createdAt      DateTime     @default(now())
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  target    String   @default("all") // all, teachers, students, parents
+  type      String   @default("info") // info, warning, event
+  createdAt DateTime @default(now())
+}
+
+model AccountingTransaction {
+  id              String   @id @default(uuid())
+  transactionType String // income, expense
+  amount          Float
+  description     String
+  accountCode     String
+  balanceBefore   Float
+  balanceAfter    Float
+  createdAt       DateTime @default(now())
+}
+
+model Admission {
+  id                    String    @id @default(uuid())
+  studentFirstName      String
+  studentLastName       String
+  parentEmail           String
+  parentPhone           String
+  level                 String
+  status                String    @default("NEW") // NEW, TEST_SCHEDULED, VALIDATED, REJECTED
+  birthCertificateUrl   String?
+  reportCardUrl         String?
+  identityPhotosUrl     String?
+  medicalCertificateUrl String?
+  testDate              DateTime?
+  notes                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model CalendarEvent {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  type        String // class, exam, meeting, holiday, event
+  target      String   @default("all") // all, teachers, students, parents
+  createdAt   DateTime @default(now())
+}
+
+model SchoolSettings {
+  id             String   @id @default("global")
+  name           String   @default("Le Flambeau Digital")
+  slogan         String   @default("Une École • Une Vision")
+  logoUrl        String?
+  primaryColor   String   @default("#D32D3F")
+  secondaryColor String   @default("#8B1A26")
+  address        String?
+  phone          String?
+  email          String?
+  updatedAt      DateTime @updatedAt
+}

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: flambeau-db
+    environment:
+      POSTGRES_DB: flambeau_db
+      POSTGRES_USER: flambeau_user
+      POSTGRES_PASSWORD: secure_password_here
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - flambeau-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: flambeau-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - flambeau-network
+
+volumes:
+  postgres_data:
+
+networks:
+  flambeau-network:
+    driver: bridge
