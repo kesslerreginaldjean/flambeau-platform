@@ -19,10 +19,12 @@ export default function LoginPage() {
     setError('');
 
     try {
+      // Audit fix: do NOT send a client-chosen role to the backend.
+      // The backend returns the real role from DB; we trust THAT.
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role: userType }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -32,8 +34,10 @@ export default function LoginPage() {
       }
 
       const data = await response.json();
+      const actualRole = data.user.role; // trust the server, not the UI selector
       localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('user_type', userType);
+      localStorage.setItem('user_role', actualRole);
+      localStorage.setItem('user_type', actualRole); // legacy alias for older code paths
       localStorage.setItem('user_email', email);
       localStorage.setItem('user_id', data.user.id);
       localStorage.setItem('user_name', `${data.user.firstName} ${data.user.lastName}`);
@@ -44,7 +48,7 @@ export default function LoginPage() {
         teacher: '/dashboard/teacher',
         admin: '/dashboard/admin',
       };
-      window.location.href = redirectMap[userType] || '/';
+      window.location.href = redirectMap[actualRole] || '/';
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message.includes('Failed to fetch') ? 'Impossible de joindre le serveur.' : err.message);

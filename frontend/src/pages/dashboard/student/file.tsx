@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
 import { STUDENT_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { 
-  User, Calendar, FileText, ShieldAlert, BadgeDollarSign, 
-  History, GraduationCap, Download, Mail, Phone, MapPin
+  User, FileText, ShieldAlert, BadgeDollarSign, 
+  GraduationCap, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { authFetch } from "@/lib/authFetch";
 export default function StudentFile() {
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
@@ -22,7 +22,7 @@ export default function StudentFile() {
       try {
         const studentId = localStorage.getItem('user_id');
         if (studentId) {
-          const response = await fetch(`http://localhost:5000/api/admin/students/${studentId}`); // Reusing admin detail route for now as it returns everything
+          const response = await authFetch(`/api/admin/students/${studentId}`); // Reusing admin detail route for now as it returns everything
           const data = await response.json();
           setStudent(data);
         } else {

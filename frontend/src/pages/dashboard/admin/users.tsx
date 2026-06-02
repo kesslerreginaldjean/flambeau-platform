@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { 
-  Plus, Trash2, Mail, User, Shield, GraduationCap as StudentIcon, FileText
+  Plus, Trash2, User, Shield, GraduationCap as StudentIcon, FileText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
 
 
+import { authFetch } from "@/lib/authFetch";
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +21,7 @@ export default function UserManagement() {
   // Form State
   const [formData, setFormData] = useState({
     email: '',
-    password: 'password123',
+    password: '', // Audit fix: no default password — admin must set one explicitly (min 10 chars).
     firstName: '',
     lastName: '',
     role: 'student',
@@ -42,7 +43,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/users');
+      const response = await authFetch('/api/admin/users');
       const data = await response.json();
       if (Array.isArray(data)) {
         setUsers(data);
@@ -64,7 +65,7 @@ export default function UserManagement() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/admin/users', {
+      const response = await authFetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -82,7 +83,7 @@ export default function UserManagement() {
   const handleDeleteUser = async (id: string) => {
     if (!confirm('Supprimer cet utilisateur ?')) return;
     try {
-      await fetch(`http://localhost:5000/api/admin/users/${id}`, { method: 'DELETE' });
+      await authFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
       fetchUsers();
     } catch (error) {
       alert('Erreur lors de la suppression');
@@ -119,7 +120,7 @@ export default function UserManagement() {
       });
 
       try {
-        const response = await fetch('http://localhost:5000/api/admin/users/import', {
+        const response = await authFetch('/api/admin/users/import', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ users: parsedUsers })

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
 import FadeIn from '@/components/FadeIn';
 import { FileText, Users, Search, CheckCircle2, Info, Upload, ArrowRight, ShieldCheck } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function Admissions() {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -40,7 +41,7 @@ export default function Admissions() {
         if (value) data.append(key, value);
       });
 
-      const response = await fetch(`${apiUrl}/api/admissions`, {
+      const response = await authFetch(`${apiUrl}/api/admissions`, {
         method: 'POST',
         body: data,
       });

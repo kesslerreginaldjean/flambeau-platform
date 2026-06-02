@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Check, AlertCircle } from 'lucide-react';
+import { X, Search, Check, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { authFetch } from "@/lib/authFetch";
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,7 +32,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModa
 
   const fetchStudents = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/users'); // This might need filtering by role
+      const res = await authFetch('/api/admin/users'); // This might need filtering by role
       const data = await res.json();
       setStudents(data.filter((u: any) => u.role === 'student'));
     } catch (err) {
@@ -45,7 +46,7 @@ export default function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModa
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/admin/payments', {
+      const res = await authFetch('/api/admin/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -219,5 +220,3 @@ export default function PaymentModal({ isOpen, onClose, onSuccess }: PaymentModa
     </div>
   );
 }
-
-import { CheckCircle2 } from 'lucide-react';

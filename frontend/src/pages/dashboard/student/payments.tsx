@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { STUDENT_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-  BadgeDollarSign, CreditCard, Download, 
+import {
+  BadgeDollarSign, CreditCard, Download,
   History, Info, CheckCircle2, Clock, AlertTriangle
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { authFetch } from "@/lib/authFetch";
 
 export default function StudentPayments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -18,7 +20,7 @@ export default function StudentPayments() {
       try {
         const userId = localStorage.getItem('user_id');
         if (userId) {
-          const response = await fetch(`http://localhost:5000/api/students/${userId}/payments`);
+          const response = await authFetch(`/api/students/${userId}/payments`);
           const data = await response.json();
           setPayments(data);
         }

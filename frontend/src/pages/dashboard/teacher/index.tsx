@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 
+import { authFetch } from "@/lib/authFetch";
 export default function TeacherDashboard() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
@@ -20,7 +21,7 @@ export default function TeacherDashboard() {
       try {
         const teacherId = localStorage.getItem('user_id');
         if (teacherId) {
-          const response = await fetch(`http://localhost:5000/api/teachers/${teacherId}/dashboard`);
+          const response = await authFetch(`/api/teachers/${teacherId}/dashboard`);
           const dashboardData = await response.json();
           setData(dashboardData);
         } else {

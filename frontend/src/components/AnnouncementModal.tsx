@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, ArrowRight } from 'lucide-react';
 import Link from 'next/link';

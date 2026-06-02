@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Settings, Save, Image as ImageIcon, Palette, 
-  School, Globe, ShieldCheck, Mail, Phone, MapPin
+  School, ShieldCheck, Mail, Phone, MapPin
 } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminSettings() {
-  const router = useRouter();
   const [settings, setSettings] = useState<any>({
     name: 'Le Flambeau Digital',
     slogan: 'Une École • Une Vision',
@@ -32,7 +31,7 @@ export default function AdminSettings() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/settings'); // Need to create this route
+      const response = await authFetch('/api/admin/settings'); // Need to create this route
       if (response.ok) {
         const data = await response.json();
         if (data) setSettings(data);
@@ -47,7 +46,7 @@ export default function AdminSettings() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const response = await fetch('http://localhost:5000/api/admin/settings', {
+      const response = await authFetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)

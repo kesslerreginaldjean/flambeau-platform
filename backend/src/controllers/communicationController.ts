@@ -1,16 +1,19 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import prisma from '../lib/prisma';
+import { AuthRequest } from '../middleware/auth';
 
 // --- MESSAGES ---
 
-export const getMessages = async (req: Request, res: Response) => {
-  const { userId } = req.query;
+export const getMessages = async (req: AuthRequest, res: Response) => {
+  // Audit fix: ignore client-supplied userId, always derive from JWT.
+  if (!req.user) return res.status(401).json({ message: 'Authentification requise.' });
+  const userId = req.user.userId;
   try {
     const messages = await prisma.message.findMany({
       where: {
         OR: [
-          { senderId: String(userId) },
-          { receiverId: String(userId) }
+          { senderId: userId },
+          { receiverId: userId }
         ]
       },
       include: {
@@ -25,11 +28,17 @@ export const getMessages = async (req: Request, res: Response) => {
   }
 };
 
-export const sendMessage = async (req: Request, res: Response) => {
-  const { senderId, receiverId, content } = req.body;
+export const sendMessage = async (req: AuthRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: 'Authentification requise.' });
+  const { receiverId, content } = req.body;
+  if (!receiverId || !content || typeof content !== 'string') {
+    return res.status(400).json({ message: 'receiverId et content requis.' });
+  }
+  if (content.length > 5000) return res.status(400).json({ message: 'Message trop long.' });
   try {
+    // Sender is always the authenticated user — never trust req.body.senderId.
     const message = await prisma.message.create({
-      data: { senderId, receiverId, content }
+      data: { senderId: req.user.userId, receiverId, content }
     });
     return res.status(201).json(message);
   } catch (error) {
@@ -39,7 +48,7 @@ export const sendMessage = async (req: Request, res: Response) => {
 
 // --- CALENDAR EVENTS ---
 
-export const getEvents = async (req: Request, res: Response) => {
+export const getEvents = async (req: AuthRequest, res: Response) => {
   const { target } = req.query;
   try {
     const events = await prisma.calendarEvent.findMany({
@@ -57,7 +66,7 @@ export const getEvents = async (req: Request, res: Response) => {
   }
 };
 
-export const createEvent = async (req: Request, res: Response) => {
+export const createEvent = async (req: AuthRequest, res: Response) => {
   const { title, description, startDate, endDate, location, type, target } = req.body;
   try {
     const event = await prisma.calendarEvent.create({
@@ -77,7 +86,7 @@ export const createEvent = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteEvent = async (req: Request, res: Response) => {
+export const deleteEvent = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   try {
     await prisma.calendarEvent.delete({ where: { id } });

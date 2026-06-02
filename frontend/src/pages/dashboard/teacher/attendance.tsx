@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { TEACHER_NAV_ITEMS } from '@/constants/navigation';
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
+import { authFetch } from "@/lib/authFetch";
 export default function TeacherAttendance() {
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<any>(null);
@@ -25,7 +26,7 @@ export default function TeacherAttendance() {
     try {
       const teacherId = localStorage.getItem('user_id');
       if (teacherId) {
-        const response = await fetch(`http://localhost:5000/api/teachers/${teacherId}/classes`);
+        const response = await authFetch(`/api/teachers/${teacherId}/classes`);
         const data = await response.json();
         setClasses(data.assignedSubjects || []);
       }
@@ -39,7 +40,7 @@ export default function TeacherAttendance() {
   const fetchStudents = async (classId: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/teachers/classes/${classId}/students`);
+      const response = await authFetch(`/api/teachers/classes/${classId}/students`);
       const data = await response.json();
       setStudents(data);
       // Default all to Present
@@ -62,7 +63,7 @@ export default function TeacherAttendance() {
         note: ''
       }));
       
-      const response = await fetch('http://localhost:5000/api/teachers/attendance', {
+      const response = await authFetch('/api/teachers/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

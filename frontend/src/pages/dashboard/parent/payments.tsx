@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
 import { PARENT_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  BadgeDollarSign, History, Info, CheckCircle2, Clock, 
-  AlertTriangle, Users, ChevronRight, Download
+  BadgeDollarSign, History, 
+  ChevronRight, Download
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
+import { authFetch } from "@/lib/authFetch";
 export default function ParentPayments() {
-  const router = useRouter();
   const [children, setChildren] = useState<any[]>([]);
   const [selectedChild, setSelectedChild] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
@@ -26,7 +25,7 @@ export default function ParentPayments() {
     try {
       const parentId = localStorage.getItem('user_id');
       if (parentId) {
-        const response = await fetch(`http://localhost:5000/api/parents/${parentId}/dashboard`);
+        const response = await authFetch(`/api/parents/${parentId}/dashboard`);
         const data = await response.json();
         setChildren(data.children || []);
       }
@@ -40,7 +39,7 @@ export default function ParentPayments() {
   const fetchChildPayments = async (childId: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/students/${childId}/payments`);
+      const response = await authFetch(`/api/students/${childId}/payments`);
       const data = await response.json();
       setPayments(data);
     } catch (error) {

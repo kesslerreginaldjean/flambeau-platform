@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, Bot, Sparkles, MinusCircle } from 'lucide-react';
+import { Send, Bot, Sparkles, MinusCircle } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 interface Message {
   id: number;
   text: string;
@@ -47,7 +48,7 @@ export const AIChatbot = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       const userRole = localStorage.getItem('user_type');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-      const response = await fetch(`${apiUrl}/api/ai/chat`, {
+      const response = await authFetch(`${apiUrl}/api/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

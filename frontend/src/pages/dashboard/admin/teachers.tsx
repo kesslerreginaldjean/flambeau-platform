@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, Calendar, BookOpen, MoreHorizontal } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminTeachers() {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +14,7 @@ export default function AdminTeachers() {
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/teachers');
+        const response = await authFetch('/api/admin/teachers');
         const data = await response.json();
         setTeachers(data);
       } catch (error) {

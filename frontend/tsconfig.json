@@ -26,13 +26,15 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "allowJs": true,
     "noEmit": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true
   },
   "include": [

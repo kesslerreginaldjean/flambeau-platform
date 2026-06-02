@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Users, 
-  GraduationCap, 
-  Briefcase, 
-  TrendingUp, 
-  ChevronRight, 
-  Clock, 
+import {
+  Users,
+  GraduationCap,
+  Briefcase,
+  TrendingUp,
+  ChevronRight,
+  Clock,
   MessageSquare,
   ArrowUpRight,
   Calendar as CalendarIcon
@@ -17,6 +17,7 @@ import {
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ students: 0, teachers: 0, parents: 0, revenue: 0 });
   const [recentMessages, setRecentMessages] = useState<any[]>([]);
@@ -24,22 +25,20 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const apiUrl = 'http://localhost:5000/api';
-      
-      // Fetch stats
-      const statsRes = await fetch(`${apiUrl}/admin/stats`);
+      // Fetch stats (authFetch resolves the host from NEXT_PUBLIC_API_URL)
+      const statsRes = await authFetch('/api/admin/stats');
       const statsData = await statsRes.json();
       setStats(statsData);
 
       // Fetch events
-      const eventsRes = await fetch(`${apiUrl}/communication/events`);
+      const eventsRes = await authFetch('/api/communication/events');
       const eventsData = await eventsRes.json();
-      setUpcomingEvents(eventsData.slice(0, 3));
+      setUpcomingEvents(Array.isArray(eventsData) ? eventsData.slice(0, 3) : []);
 
-      // Fetch messages (simulated for now or real if data exists)
-      const messagesRes = await fetch(`${apiUrl}/communication/messages?userId=admin-id`);
+      // Fetch messages — userId comes from the JWT server-side, no query param needed.
+      const messagesRes = await authFetch('/api/communication/messages');
       const messagesData = await messagesRes.json();
-      setRecentMessages(messagesData.slice(0, 3));
+      setRecentMessages(Array.isArray(messagesData) ? messagesData.slice(0, 3) : []);
 
     } catch (error) {
       console.error('Failed to fetch dashboard data');

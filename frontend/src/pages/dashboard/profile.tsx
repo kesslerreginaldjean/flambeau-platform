@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, MapPin, Camera, Shield, Bell } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function UserProfile() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -31,7 +32,7 @@ export default function UserProfile() {
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/auth/me', {
+        const response = await authFetch('/api/auth/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -62,7 +63,7 @@ export default function UserProfile() {
     try {
       setUpdating(true);
       const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await authFetch('/api/auth/profile', {
         method: 'PUT',
         headers: { 
             'Content-Type': 'application/json',

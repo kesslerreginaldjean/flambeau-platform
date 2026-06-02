@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
@@ -6,11 +6,12 @@ import { PARENT_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  User, GraduationCap, ShieldAlert, BadgeDollarSign, 
-  FileText, ArrowLeft, Download, Mail, Calendar, History
+  GraduationCap, ShieldAlert, BadgeDollarSign, 
+  ArrowLeft, Download, Mail, History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { authFetch } from "@/lib/authFetch";
 export default function ParentChildFile() {
   const router = useRouter();
   const { childId } = router.query;
@@ -23,7 +24,7 @@ export default function ParentChildFile() {
 
     const fetchChildFile = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/parents/children/${childId}`);
+        const response = await authFetch(`/api/parents/children/${childId}`);
         const data = await response.json();
         setStudent(data);
       } catch (error) {

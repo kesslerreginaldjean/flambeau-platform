@@ -1,12 +1,16 @@
 import { Router } from 'express';
-import { 
-  getStats, getUsers, createUser, deleteUser, importUsers, getTeachers, getStudents, 
+import {
+  getStats, getUsers, createUser, deleteUser, importUsers, getTeachers, getStudents,
   getPayments, createPayment, submitGrade, getAnnouncements, createAnnouncement, deleteAnnouncement,
   getStudentDetail, getSettings, updateSettings, getAdmissions, updateAdmissionStatus,
-  getAcademicInfo
+  getAcademicInfo,
 } from '../controllers/adminController';
+import { verifyToken, requireRole } from '../middleware/auth';
 
 const router = Router();
+
+// Audit P0-4: every admin route requires a valid JWT AND role=admin.
+router.use(verifyToken, requireRole('admin'));
 
 router.get('/stats', getStats);
 router.get('/academic', getAcademicInfo);
@@ -28,7 +32,6 @@ router.delete('/users/:id', deleteUser);
 router.post('/users/import', importUsers);
 router.delete('/announcements/:id', deleteAnnouncement);
 
-// Placeholder for other admin dashboard summary data
 router.get('/dashboard', (_req, res) => {
   res.json({ message: 'Summary for admin dashboard' });
 });

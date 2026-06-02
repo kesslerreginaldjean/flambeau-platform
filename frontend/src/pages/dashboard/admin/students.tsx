@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminStudents() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,7 @@ export default function AdminStudents() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/admin/students');
+      const response = await authFetch('/api/admin/students');
       const data = await response.json();
       setStudents(data);
     } catch (error) {
@@ -42,7 +43,7 @@ export default function AdminStudents() {
   const handleViewDetail = async (id: string) => {
     try {
       setDetailLoading(true);
-      const response = await fetch(`http://localhost:5000/api/admin/students/${id}`);
+      const response = await authFetch(`/api/admin/students/${id}`);
       const data = await response.json();
       
       if (data.error) {

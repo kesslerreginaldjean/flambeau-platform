@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState<any[]>([]);
@@ -35,7 +36,7 @@ export default function AdminCalendar() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/communication/events');
+      const response = await authFetch('/api/communication/events');
       const data = await response.json();
       setEvents(data);
     } catch (error) {
@@ -52,7 +53,7 @@ export default function AdminCalendar() {
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/communication/events', {
+      const response = await authFetch('/api/communication/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -70,7 +71,7 @@ export default function AdminCalendar() {
   const handleDeleteEvent = async (id: string) => {
     if (!confirm('Supprimer cet événement ?')) return;
     try {
-      await fetch(`http://localhost:5000/api/communication/events/${id}`, { method: 'DELETE' });
+      await authFetch(`/api/communication/events/${id}`, { method: 'DELETE' });
       fetchEvents();
     } catch (error) {
       alert('Erreur lors de la suppression');

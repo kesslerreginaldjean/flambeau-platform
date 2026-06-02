@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS, STUDENT_NAV_ITEMS, TEACHER_NAV_ITEMS, PARENT_NAV_ITEMS } from '@/constants/navigation';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Calendar as CalendarIcon, Info, AlertTriangle, Megaphone } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function SharedAnnouncements() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,7 @@ export default function SharedAnnouncements() {
     
     const fetchAnnouncements = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/announcements');
+        const response = await authFetch('/api/admin/announcements');
         const data = await response.json();
         // Optionnel: filtrer par cible selon le rôle de l'utilisateur
         setAnnouncements(data);
@@ -60,7 +61,7 @@ export default function SharedAnnouncements() {
                 <Megaphone className="w-16 h-16 text-slate-200 mx-auto mb-4" />
                 <p className="text-slate-400 font-bold uppercase tracking-widest">Aucune annonce pour le moment</p>
              </div>
-           ) : announcements.map((ann, i) => (
+           ) : announcements.map((ann) => (
              <Card key={ann.id} className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden transition-all hover:scale-[1.01]">
                 <div className="p-10 flex flex-col md:flex-row gap-8 items-start">
                    <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 ${

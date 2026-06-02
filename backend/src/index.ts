@@ -1,23 +1,61 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-
-// Load environment variables
-dotenv.config();
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { env } from './lib/env';
+import { uploadsHandler } from './middleware/uploadsAuth';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// --- Security headers (audit P1-1) ---
+app.use(helmet({
+  // Allow images from the API itself; the rest is locked down.
+  contentSecurityPolicy: env.isProd ? undefined : false,
+  crossOriginResourcePolicy: { policy: 'same-site' },
+}));
 
-// Serve static files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// --- CORS: whitelist instead of wide-open (audit P1-1) ---
+const allowedOrigins = [env.FRONTEND_URL].filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow same-origin / curl (no Origin header) in dev only.
+    if (!origin) return cb(null, !env.isProd);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('Origine non autorisée'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+}));
 
-// Routes
+// --- Body parsers ---
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// --- Trust proxy when behind a reverse proxy (required for accurate rate-limit IPs) ---
+if (env.isProd) app.set('trust proxy', 1);
+
+// --- Global rate limit (audit P1-1) ---
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
+
+// --- Auth-specific rate limit: tighter, to slow brute-force on /login & /register ---
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Trop de tentatives. Réessayez plus tard.' },
+});
+
+// --- Protected static uploads (audit P0-7) ---
+app.use('/uploads', uploadsHandler);
+
+// --- Routers ---
 import authRoutes from './routes/auth';
 import studentRoutes from './routes/students';
 import parentRoutes from './routes/parents';
@@ -28,7 +66,7 @@ import aiRoutes from './routes/ai';
 import communicationRoutes from './routes/communication';
 import publicRoutes from './routes/public';
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/parents', parentRoutes);
 app.use('/api/teachers', teacherRoutes);
@@ -38,24 +76,26 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/public', publicRoutes);
 
-// Health check
+// --- Health check ---
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ status: 'OK', env: env.NODE_ENV, timestamp: new Date().toISOString() });
 });
 
-// Error handling middleware
+// --- 404 ---
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// --- Error handler (audit: never leak stack traces in prod) ---
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Error:', err);
+  console.error('[error]', err?.stack ?? err);
   res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    error: env.isProd ? 'Internal Server Error' : (err.message || 'Internal Server Error'),
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+app.listen(env.PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${env.PORT} (${env.NODE_ENV})`);
 });
 
 export default app;

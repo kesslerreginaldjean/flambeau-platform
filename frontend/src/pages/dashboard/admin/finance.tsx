@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import PaymentModal from '@/components/PaymentModal';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminFinance() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,8 +22,8 @@ export default function AdminFinance() {
   const fetchFinanceData = async () => {
     try {
       const [paymentsRes, statsRes] = await Promise.all([
-        fetch('http://localhost:5000/api/admin/payments'),
-        fetch('http://localhost:5000/api/admin/stats')
+        authFetch('/api/admin/payments'),
+        authFetch('/api/admin/stats')
       ]);
       const paymentsData = await paymentsRes.json();
       const statsData = await statsRes.json();

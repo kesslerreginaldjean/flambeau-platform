@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
 import { STUDENT_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { History, GraduationCap, Download, Calendar } from 'lucide-react';
+import { History, GraduationCap, Download } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function StudentGrades() {
   const router = useRouter();
   const [grades, setGrades] = useState<any[]>([]);
@@ -21,7 +22,7 @@ export default function StudentGrades() {
         setUserName(name);
 
         if (studentId) {
-          const response = await fetch(`http://localhost:5000/api/students/${studentId}/grades`);
+          const response = await authFetch(`/api/students/${studentId}/grades`);
           const data = await response.json();
           setGrades(data);
         } else {

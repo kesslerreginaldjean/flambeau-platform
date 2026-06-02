@@ -187,6 +187,9 @@ model Payment {
   dueDate        DateTime
   paidDate       DateTime?
   notes          String?
+  // Audit trail (P1-3)
+  createdById    String?
+  kotelamRef     String?      @unique // idempotency key for Kotelam webhooks
   createdAt      DateTime     @default(now())
 }
 
@@ -207,7 +210,13 @@ model AccountingTransaction {
   accountCode     String
   balanceBefore   Float
   balanceAfter    Float
+  // Audit trail (P1-3)
+  createdById     String?
+  referenceId     String?  // optional FK to Payment.id or external ref
   createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([transactionType])
 }
 
 model Admission {

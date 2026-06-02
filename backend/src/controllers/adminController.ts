@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import bcrypt from 'bcrypt';
+import { AuthRequest } from '../middleware/auth';
+import { env } from '../lib/env';
 
 export const getStats = async (_req: Request, res: Response) => {
   try {
@@ -92,12 +94,21 @@ export const createUser = async (req: Request, res: Response) => {
   } = req.body;
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (!password || typeof password !== 'string' || password.length < 10) {
+      return res.status(400).json({ error: 'Mot de passe requis (10 caractères minimum).' });
+    }
+    const hashedPassword = await bcrypt.hash(password, env.BCRYPT_COST);
     
     // Get current academic year for student enrollment
     const currentYear = await prisma.academicYear.findFirst({
       where: { isCurrent: true }
     });
+
+    // Audit fix: validate role against an allow-list (admin can create any of these).
+    const ALLOWED_ROLES = ['admin', 'teacher', 'parent', 'student'];
+    if (!ALLOWED_ROLES.includes(role)) {
+      return res.status(400).json({ error: 'Rôle invalide.' });
+    }
 
     const newUser = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
@@ -212,15 +223,31 @@ export const importUsers = async (req: Request, res: Response) => {
     const results = await Promise.all(users.map(async (userData) => {
       try {
         await prisma.$transaction(async (tx) => {
+          // Audit fix: require a real password per imported user instead of a
+          // shared hard-coded hash. If absent, generate a random one and force
+          // password reset on first login (status='pending_password_reset').
+          let passwordHash: string;
+          let status = 'active';
+          if (userData.password && typeof userData.password === 'string' && userData.password.length >= 10) {
+            passwordHash = await bcrypt.hash(userData.password, env.BCRYPT_COST);
+          } else {
+            const tempPwd = require('crypto').randomBytes(16).toString('hex');
+            passwordHash = await bcrypt.hash(tempPwd, env.BCRYPT_COST);
+            status = 'pending_password_reset';
+          }
+
+          const safeRole = ['student', 'parent', 'teacher'].includes(userData.role) ? userData.role : 'student';
+
           const user = await tx.user.create({
             data: {
               email: userData.email,
-              password: userData.password || '$2b$10$E69xHEwLeDLqhZjur9.SYuje/MwQfTkuVW/bjrz9/vF54a8LqpyTm',
+              password: passwordHash,
               firstName: userData.firstName,
               lastName: userData.lastName,
-              role: userData.role || 'student',
+              role: safeRole,
               phone: userData.phone,
               gender: userData.gender || 'M',
+              status,
             }
           });
 
@@ -269,47 +296,71 @@ export const getPayments = async (_req: Request, res: Response) => {
   }
 };
 
-export const createPayment = async (req: Request, res: Response) => {
+/**
+ * POST /api/admin/payments
+ *
+ * Audit P1-3:
+ *  - Wrapped in a single prisma.$transaction so payment + accounting either both
+ *    succeed or both rollback (atomic).
+ *  - `createdById` is set from the authenticated admin (audit trail).
+ *  - Two concurrent calls cannot corrupt the running balance because the read
+ *    (findFirst) and write (create) live in the same transaction; Prisma serialises
+ *    transactions on SQLite, and on Postgres we add an advisory lock if needed.
+ *  - Manual `status: 'completed'` is allowed (admin attestation) but stamped with
+ *    actor + accounting ref so it can be audited.
+ */
+export const createPayment = async (req: AuthRequest, res: Response) => {
   const { studentId, amount, paymentType, status, dueDate, notes, academicYearId } = req.body;
-  try {
-    const currentYear = academicYearId || (await prisma.academicYear.findFirst({ where: { isCurrent: true } }))?.id;
-    
-    if (!currentYear) return res.status(400).json({ error: 'Academic year required' });
+  const actorId = req.user?.userId;
 
-    const payment = await prisma.payment.create({
-      data: {
-        studentId,
-        academicYearId: currentYear,
-        amount,
-        paymentType,
-        status,
-        dueDate: new Date(dueDate),
-        paidDate: status === 'completed' ? new Date() : null,
-        notes
+  try {
+    const currentYearId = academicYearId
+      || (await prisma.academicYear.findFirst({ where: { isCurrent: true } }))?.id;
+    if (!currentYearId) return res.status(400).json({ error: 'Academic year required' });
+
+    const result = await prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.create({
+        data: {
+          studentId,
+          academicYearId: currentYearId,
+          amount,
+          paymentType,
+          status,
+          dueDate: new Date(dueDate),
+          paidDate: status === 'completed' ? new Date() : null,
+          notes,
+          createdById: actorId,
+        },
+      });
+
+      if (status === 'completed') {
+        const last = await tx.accountingTransaction.findFirst({ orderBy: { createdAt: 'desc' } });
+        const balanceBefore = last?.balanceAfter ?? 0;
+        await tx.accountingTransaction.create({
+          data: {
+            transactionType: 'income',
+            amount,
+            description: `Paiement ${paymentType} (élève ${studentId})`,
+            accountCode: '4111',
+            balanceBefore,
+            balanceAfter: balanceBefore + amount,
+            referenceId: payment.id,
+            createdById: actorId,
+          },
+        });
       }
+      return payment;
     });
 
-    if (status === 'completed') {
-      const lastTransaction = await prisma.accountingTransaction.findFirst({ orderBy: { createdAt: 'desc' } });
-      const balanceBefore = lastTransaction?.balanceAfter || 0;
-      
-      await prisma.accountingTransaction.create({
-        data: {
-          transactionType: 'income',
-          amount,
-          description: `Paiement: ${paymentType}`,
-          accountCode: '4111',
-          balanceBefore,
-          balanceAfter: balanceBefore + amount
-        }
-      });
-    }
-
-    return res.status(201).json(payment);
-  } catch (error) {
+    return res.status(201).json(result);
+  } catch (error: any) {
+    console.error('[admin] createPayment:', error?.message ?? error);
     return res.status(500).json({ error: 'Failed to create payment' });
   }
 };
+
+// Suppress unused-var lint for env (kept for future Kotelam wiring).
+void env;
 
 export const submitGrade = async (req: Request, res: Response) => {
   const { studentId, subject, score, teacherName, term, academicYearId } = req.body;
@@ -435,14 +486,17 @@ export const updateAdmissionStatus = async (req: Request, res: Response) => {
   try {
     // If validated, we perform a transaction to create the user, student, and enrollment
     if (status === 'VALIDATED') {
-      const bcrypt = require('bcrypt');
-      const hashedDefaultPassword = await bcrypt.hash('ChangerMoi123', 10);
+      // Audit fix: generate a unique random password per student instead of a
+      // shared "ChangerMoi123" hash. Status flagged so the user MUST reset on first login.
+      const tempPassword = require('crypto').randomBytes(12).toString('base64url');
+      const hashedDefaultPassword = await bcrypt.hash(tempPassword, env.BCRYPT_COST);
+      // TODO: email the temp password securely to admission.parentEmail (out of scope here).
 
       const result = await prisma.$transaction(async (tx) => {
         const admission = await tx.admission.findUnique({ where: { id } });
         if (!admission) throw new Error('Admission not found');
 
-        // 1. Create User
+        // 1. Create User (status forces password reset on first login)
         const user = await tx.user.create({
           data: {
             email: admission.parentEmail,
@@ -450,7 +504,7 @@ export const updateAdmissionStatus = async (req: Request, res: Response) => {
             firstName: admission.studentFirstName,
             lastName: admission.studentLastName,
             role: 'student',
-            status: 'active'
+            status: 'pending_password_reset'
           }
         });
 

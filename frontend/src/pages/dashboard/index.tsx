@@ -1,18 +1,23 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { getUserRole, isAuthenticated } from '@/lib/auth';
 
+/**
+ * Audit fix (P1-4): use the canonical role key from lib/auth.ts.
+ * Previously this file read `user_role` while login.tsx wrote `user_type`,
+ * so the redirect always ended in /login.
+ */
 export default function DashboardRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    const userRole = localStorage.getItem('user_role');
-    
-    if (!userRole) {
+    if (!isAuthenticated()) {
       router.push('/login');
       return;
     }
+    const role = getUserRole();
 
-    switch (userRole) {
+    switch (role) {
       case 'admin':
         router.push('/dashboard/admin');
         break;

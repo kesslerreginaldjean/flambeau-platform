@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
@@ -13,6 +13,7 @@ import {
 import FadeIn from '@/components/FadeIn';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminAdmissions() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export default function AdminAdmissions() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch(`${apiUrl}/api/admin/academic`);
+      const response = await authFetch(`${apiUrl}/api/admin/academic`);
       const data = await response.json();
       setClasses(data.classes || []);
     } catch (err) {
@@ -45,12 +46,12 @@ export default function AdminAdmissions() {
   const fetchAdmissions = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${apiUrl}/api/admin/admissions`);
+      const response = await authFetch(`${apiUrl}/api/admin/admissions`);
       if (!response.ok) throw new Error('Impossible de charger les dossiers');
       const data = await response.json();
       setRequests(data);
     } catch (err) {
-      setError('Erreur lors du chargement des admissions.');
+      console.error('Erreur lors du chargement des admissions:', err);
     } finally {
       setLoading(false);
     }
@@ -58,7 +59,7 @@ export default function AdminAdmissions() {
 
   const updateStatus = async (id: string, status: string, classId?: string) => {
     try {
-      const response = await fetch(`${apiUrl}/api/admin/admissions/${id}/status`, {
+      const response = await authFetch(`${apiUrl}/api/admin/admissions/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, classId })
@@ -76,7 +77,7 @@ export default function AdminAdmissions() {
   };
   const scheduleInterview = async (id: string, date: string) => {
     try {
-      const response = await fetch(`${apiUrl}/api/admin/admissions/${id}/schedule`, {
+      const response = await authFetch(`${apiUrl}/api/admin/admissions/${id}/schedule`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testDate: date })

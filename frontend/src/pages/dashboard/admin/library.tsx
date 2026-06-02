@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Book, Plus, Download, Trash2, FileText, Globe, BookOpen } from 'lucide-react';
+import { Search, Book, Plus, Download, Trash2, Globe } from 'lucide-react';
 
 export default function AdminLibrary() {
   const [searchTerm, setSearchTerm] = useState('');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   History as HistoryIcon, Plus, School, Calendar, 
-  Users, ChevronRight, BookOpen, Layers
+  Users, ChevronRight, Layers
 } from 'lucide-react';
+import { authFetch } from "@/lib/authFetch";
 export default function AdminAcademic() {
   const [classes, setClasses] = useState<any[]>([]);
-  const [academicData, setAcademicData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setAcademicData] = useState<any>(null);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAcademicData();
@@ -20,7 +21,7 @@ export default function AdminAcademic() {
 
   const fetchAcademicData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/academic');
+      const response = await authFetch('/api/admin/academic');
       const data = await response.json();
       setAcademicData(data);
       setClasses(data.classes || []);

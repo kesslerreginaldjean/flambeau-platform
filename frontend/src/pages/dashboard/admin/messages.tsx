@@ -2,23 +2,24 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Send, Phone, Video, MoreVertical, Paperclip, Smile, MessageSquare } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminMessages() {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [contacts, setContacts] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   // Fetch real users to use as contacts
   const fetchContacts = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/users');
+      const response = await authFetch('/api/admin/users');
       const data = await response.json();
       // On filtre pour ne pas se voir soi-même (l'admin) dans la liste des contacts
       const filteredContacts = data.filter((u: any) => u.role !== 'admin');
@@ -31,7 +32,7 @@ export default function AdminMessages() {
   const fetchMessages = async () => {
     if (!selectedUser) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/communication/messages?userId=${selectedUser.id}`);
+      const response = await authFetch(`/api/communication/messages?userId=${selectedUser.id}`);
       const data = await response.json();
       setMessages(data);
     } catch (error) {
@@ -43,12 +44,11 @@ export default function AdminMessages() {
 
 
   useEffect(() => {
-    if (selectedUser) {
-      fetchMessages();
-      // On peut mettre un intervalle pour rafraîchir les messages automatiquement
-      const interval = setInterval(fetchMessages, 3000);
-      return () => clearInterval(interval);
-    }
+    if (!selectedUser) return;
+    fetchMessages();
+    // On peut mettre un intervalle pour rafraîchir les messages automatiquement
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
   }, [selectedUser]);
 
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -70,7 +70,7 @@ export default function AdminMessages() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/communication/messages', {
+      const response = await authFetch('/api/communication/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMessage)

@@ -4,16 +4,38 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Environment variables — never commit
 .env
-.env.local
-.env.production.local
-.env.development.local
-.env.test.local
+.env.*
+!.env.example
+
+# Editor / OS
 .DS_Store
 .idea/
 .vscode/
 *.swp
 *.swo
+
+# Build artefacts
 build/
 .next/
 out/
+
+# Databases — NEVER commit (audit P0-1)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/dev.db
+backend/flambeau.db
+backend/prisma/dev.db
+backend/prisma/*.db
+
+# Uploaded user files (PII) — never commit
+backend/uploads/
+uploads/
+
+# Misc
+*.tmp
+*.bak

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Send, Megaphone, Calendar as CalendarIcon, Clock, MapPin, Trash2 } from 'lucide-react';
 
+import { authFetch } from "@/lib/authFetch";
 export default function AdminAnnouncements() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ export default function AdminAnnouncements() {
 
   const fetchAnnouncements = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/announcements');
+      const response = await authFetch('/api/admin/announcements');
       const data = await response.json();
       setAnnouncements(data);
     } catch (error) {
@@ -41,7 +42,7 @@ export default function AdminAnnouncements() {
     e.preventDefault();
     try {
       // 1. Create the Announcement
-      const response = await fetch('http://localhost:5000/api/admin/announcements', {
+      const response = await authFetch('/api/admin/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,7 +55,7 @@ export default function AdminAnnouncements() {
 
       // 2. If it's an event and has a date, create a Calendar Event automatically
       if (formData.startDate) {
-        await fetch('http://localhost:5000/api/communication/events', {
+        await authFetch('/api/communication/events', {
            method: 'POST',
            headers: { 'Content-Type': 'application/json' },
            body: JSON.stringify({
@@ -82,7 +83,7 @@ export default function AdminAnnouncements() {
   const handleDelete = async (id: string) => {
     if (!confirm('Voulez-vous vraiment supprimer cette annonce ?')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/announcements/${id}`, {
+      const response = await authFetch(`/api/admin/announcements/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {

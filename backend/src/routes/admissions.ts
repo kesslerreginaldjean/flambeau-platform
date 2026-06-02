@@ -1,50 +1,54 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
+import prisma from '../lib/prisma';
+import { verifyToken, requireRole } from '../middleware/auth';
+import { validate, schemas } from '../middleware/validate';
 
 const router = Router();
-const prisma = new PrismaClient();
 
-// Configure Multer for file storage
+// Use crypto.randomBytes for unguessable filenames (audit fix).
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const dir = 'uploads/admissions';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+    const safeExt = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, '');
+    const random = crypto.randomBytes(24).toString('hex');
+    cb(null, `${file.fieldname}-${random}${safeExt}`);
+  },
 });
 
-const upload = multer({ 
+const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|pdf/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    if (extname && mimetype) {
+    const allowedExt = /\.(jpe?g|png|pdf)$/i;
+    const allowedMime = /^(image\/jpe?g|image\/png|application\/pdf)$/i;
+    if (allowedExt.test(file.originalname) && allowedMime.test(file.mimetype)) {
       return cb(null, true);
     }
-    cb(new Error('Format de fichier non supporté (Uniquement JPG, PNG, PDF)'));
-  }
+    cb(new Error('Format de fichier non supporté (JPG, PNG, PDF uniquement).'));
+  },
 });
 
 const uploadFields = upload.fields([
   { name: 'birthCertificate', maxCount: 1 },
   { name: 'reportCard', maxCount: 1 },
   { name: 'identityPhotos', maxCount: 1 },
-  { name: 'medicalCertificate', maxCount: 1 }
+  { name: 'medicalCertificate', maxCount: 1 },
 ]);
 
-// POST /api/admissions - Soumettre une nouvelle candidature
-router.post('/', uploadFields, async (req: Request, res: Response) => {
+/**
+ * POST /api/admissions
+ * PUBLIC route — anyone can submit a candidature.
+ * Rate-limited at the app level (helmet + express-rate-limit) — see index.ts.
+ */
+router.post('/', uploadFields, validate(schemas.admission), async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, email, phone, level, message } = req.body;
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -55,24 +59,27 @@ router.post('/', uploadFields, async (req: Request, res: Response) => {
         studentLastName: lastName,
         parentEmail: email,
         parentPhone: phone,
-        level: level,
+        level,
         notes: message,
         birthCertificateUrl: files['birthCertificate'] ? `/uploads/admissions/${files['birthCertificate'][0].filename}` : null,
         reportCardUrl: files['reportCard'] ? `/uploads/admissions/${files['reportCard'][0].filename}` : null,
         identityPhotosUrl: files['identityPhotos'] ? `/uploads/admissions/${files['identityPhotos'][0].filename}` : null,
         medicalCertificateUrl: files['medicalCertificate'] ? `/uploads/admissions/${files['medicalCertificate'][0].filename}` : null,
-        status: 'NEW'
-      }
+        status: 'NEW',
+      },
     });
 
-    res.status(201).json({ message: 'Candidature reçue avec succès !', admission });
+    // Return only the admission id — do not echo PII.
+    return res.status(201).json({ message: 'Candidature reçue avec succès.', admissionId: admission.id });
   } catch (error: any) {
-    console.error('Erreur admission:', error);
-    res.status(500).json({ error: error.message || 'Erreur lors de la soumission du dossier.' });
+    console.error('[admissions] submission error:', error?.message ?? error);
+    return res.status(500).json({ error: 'Erreur lors de la soumission du dossier.' });
   }
 });
 
-// GET /api/admissions - Liste toutes les candidatures (Admin)
+// Admin-only routes for managing applications.
+router.use(verifyToken, requireRole('admin'));
+
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const admissions = await prisma.admission.findMany({ orderBy: { createdAt: 'desc' } });
@@ -82,40 +89,19 @@ router.get('/', async (_req: Request, res: Response) => {
   }
 });
 
-// PATCH /api/admissions/:id/status - Mettre à jour le statut
-router.patch('/:id/status', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { status, notes } = req.body;
-    
-    // Si validation, on peut avoir de la logique complexe ici, 
-    // mais pour l'instant on se contente de mettre à jour le statut.
-    const admission = await prisma.admission.update({
-      where: { id },
-      data: { status, ...(notes && { notes }) }
-    });
-    res.json(admission);
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur lors de la mise à jour du statut.' });
-  }
-});
-
-// PATCH /api/admissions/:id/schedule - Planifier un test / entretien
 router.patch('/:id/schedule', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { testDate } = req.body;
+    if (!testDate) return res.status(400).json({ error: 'testDate requis.' });
     const admission = await prisma.admission.update({
       where: { id },
-      data: { 
-        testDate: new Date(testDate), 
-        status: 'TEST_SCHEDULED' 
-      }
+      data: { testDate: new Date(testDate), status: 'TEST_SCHEDULED' },
     });
-    res.json(admission);
+    return res.json(admission);
   } catch (error) {
-    console.error('Erreur planification:', error);
-    res.status(500).json({ error: 'Erreur lors de la planification.' });
+    console.error('[admissions] schedule error:', error);
+    return res.status(500).json({ error: 'Erreur lors de la planification.' });
   }
 });
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
@@ -6,10 +6,10 @@ import { PARENT_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Users, BookOpen, BadgeDollarSign, Bell, ArrowUpRight, MoreHorizontal, GraduationCap
+  Users, BadgeDollarSign, Bell, ArrowUpRight
 } from 'lucide-react';
-import Link from 'next/link';
 
+import { authFetch } from "@/lib/authFetch";
 export default function ParentDashboard() {
   const router = useRouter();
   const [data, setData] = useState<any>(null);
@@ -20,7 +20,7 @@ export default function ParentDashboard() {
       try {
         const parentId = localStorage.getItem('user_id');
         if (parentId) {
-          const response = await fetch(`http://localhost:5000/api/parents/${parentId}/dashboard`);
+          const response = await authFetch(`/api/parents/${parentId}/dashboard`);
           const dashboardData = await response.json();
           setData(dashboardData);
         } else {
