@@ -479,22 +479,54 @@ export const getAdmissions = async (_req: Request, res: Response) => {
   }
 };
 
+/**
+ * Enregistre la note obtenue à l'examen d'entrée et passe le dossier en TEST_TAKEN.
+ * Étape préalable à la validation finale (conversion → ID unique).
+ */
+export const recordAdmissionScore = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const score = Number(req.body?.testScore);
+  if (!Number.isFinite(score) || score < 0 || score > 100) {
+    return res.status(400).json({ error: 'Note invalide : attendu un nombre entre 0 et 100.' });
+  }
+  try {
+    const admission = await prisma.admission.update({
+      where: { id },
+      data: { testScore: score, status: 'TEST_TAKEN' },
+    });
+    return res.json(admission);
+  } catch (error: any) {
+    console.error('Admission score error:', error?.message ?? error);
+    return res.status(500).json({ error: "Échec de l'enregistrement de la note." });
+  }
+};
+
 export const updateAdmissionStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status, notes, testDate, classId } = req.body;
-  
+  const { status, notes, testDate, classId, testScore } = req.body;
+
   try {
     // If validated, we perform a transaction to create the user, student, and enrollment
     if (status === 'VALIDATED') {
       // Audit fix: generate a unique random password per student instead of a
       // shared "ChangerMoi123" hash. Status flagged so the user MUST reset on first login.
-      const tempPassword = require('crypto').randomBytes(12).toString('base64url');
+      const tempPassword = require('crypto').randomBytes(9).toString('base64url');
       const hashedDefaultPassword = await bcrypt.hash(tempPassword, env.BCRYPT_COST);
-      // TODO: email the temp password securely to admission.parentEmail (out of scope here).
 
       const result = await prisma.$transaction(async (tx) => {
         const admission = await tx.admission.findUnique({ where: { id } });
         if (!admission) throw new Error('Admission not found');
+        if (admission.studentNumber) {
+          throw new Error('Cette candidature a déjà été convertie en élève.');
+        }
+
+        // Structured unique ID: STU-<année>-<séquence sur 4 chiffres>
+        const year = new Date().getFullYear();
+        const prefix = `STU-${year}-`;
+        const countThisYear = await tx.student.count({
+          where: { studentNumber: { startsWith: prefix } },
+        });
+        const studentNumber = `${prefix}${String(countThisYear + 1).padStart(4, '0')}`;
 
         // 1. Create User (status forces password reset on first login)
         const user = await tx.user.create({
@@ -504,49 +536,60 @@ export const updateAdmissionStatus = async (req: Request, res: Response) => {
             firstName: admission.studentFirstName,
             lastName: admission.studentLastName,
             role: 'student',
-            status: 'pending_password_reset'
-          }
+            status: 'pending_password_reset',
+          },
         });
 
-        // 2. Create Student
+        // 2. Create Student with the structured ID
         const student = await tx.student.create({
-          data: {
-            userId: user.id,
-            studentNumber: `STU-${Date.now().toString().slice(-6)}`,
-            enrollmentDate: new Date()
-          }
+          data: { userId: user.id, studentNumber, enrollmentDate: new Date() },
         });
 
-        // 3. Create Enrollment
+        // 3. Create Enrollment (only when a real class is provided)
         const currentYear = await tx.academicYear.findFirst({ where: { isCurrent: true } });
-        if (currentYear) {
-           await tx.enrollment.create({
-             data: {
-               studentId: student.id,
-               academicYearId: currentYear.id,
-               classId: classId || 'temp-id'
-             }
-           });
+        if (currentYear && classId) {
+          await tx.enrollment.create({
+            data: { studentId: student.id, academicYearId: currentYear.id, classId },
+          });
         }
 
-        // 4. Update admission status
-        return await tx.admission.update({
+        // 4. Update admission: stamp the generated ID + (optional) exam score
+        const updated = await tx.admission.update({
           where: { id },
-          data: { status, notes, testDate: testDate ? new Date(testDate) : undefined }
+          data: {
+            status,
+            notes: notes !== undefined ? notes : undefined,
+            studentNumber,
+            testScore:
+              testScore !== undefined && testScore !== null && testScore !== ''
+                ? Number(testScore)
+                : undefined,
+            testDate: testDate ? new Date(testDate) : undefined,
+          },
         });
+        return { admission: updated, studentNumber };
       });
 
-      return res.json({ message: 'Admission validée et compte étudiant créé', admission: result });
+      // TODO(email): send a welcome email to parentEmail with studentNumber + first-login link.
+      return res.json({
+        message: 'Admission validée et compte étudiant créé',
+        admission: result.admission,
+        credentials: {
+          studentNumber: result.studentNumber,
+          temporaryPassword: tempPassword,
+          email: result.admission.parentEmail,
+        },
+      });
     }
-    
+
     // Normal update for other statuses
     const admission = await prisma.admission.update({
       where: { id },
-      data: { 
-        status, 
+      data: {
+        status,
         notes: notes !== undefined ? notes : undefined,
-        testDate: testDate ? new Date(testDate) : undefined
-      }
+        testDate: testDate ? new Date(testDate) : undefined,
+      },
     });
 
     return res.json(admission);

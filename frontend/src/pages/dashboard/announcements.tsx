@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS, STUDENT_NAV_ITEMS, TEACHER_NAV_ITEMS, PARENT_NAV_ITEMS } from '@/constants/navigation';
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Calendar as CalendarIcon, Info, AlertTriangle, Megaphone } from 'lucide-react';
+import { Calendar as CalendarIcon, Info, AlertTriangle, Megaphone } from 'lucide-react';
 
 import { authFetch } from "@/lib/authFetch";
 export default function SharedAnnouncements() {
@@ -42,56 +41,45 @@ export default function SharedAnnouncements() {
         <title>Annonces & Communications | CLF</title>
       </Head>
 
-      <div className="p-6 max-w-5xl mx-auto">
-        <div className="mb-10 text-center">
-          <div className="w-20 h-20 bg-[#FFF8E7] rounded-3xl flex items-center justify-center text-[#D32D3F] mx-auto mb-6 shadow-sm border border-[#FDE68A]">
-            <Bell className="w-10 h-10" />
-          </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Centre de Communication</h1>
-          <p className="text-slate-500 font-medium">Retrouvez toutes les annonces officielles du Collège Le Flambeau.</p>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-10">
+          <p className="kicker mb-2">Communications</p>
+          <h1 className="text-4xl font-semibold text-ink tracking-tight">Centre de Communication</h1>
+          <p className="text-soft mt-2">Retrouvez toutes les annonces officielles du Collège Le Flambeau.</p>
         </div>
 
-        <div className="space-y-8">
+        <div className="border-t border-line">
            {loading ? (
-             <div className="space-y-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-40 bg-slate-50 animate-pulse rounded-[3rem]"></div>)}
+             <div className="divide-y divide-line">
+                {[1, 2, 3].map(i => <div key={i} className="h-32 bg-panel animate-pulse"></div>)}
              </div>
            ) : announcements.length === 0 ? (
-             <div className="p-20 text-center bg-white rounded-[3rem] shadow-xl border border-slate-100">
-                <Megaphone className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest">Aucune annonce pour le moment</p>
+             <div className="p-20 text-center border-b border-line bg-paper">
+                <Megaphone className="w-12 h-12 text-line mx-auto mb-4" />
+                <p className="mono text-xs text-soft uppercase tracking-widest">Aucune annonce pour le moment</p>
              </div>
            ) : announcements.map((ann) => (
-             <Card key={ann.id} className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden transition-all hover:scale-[1.01]">
-                <div className="p-10 flex flex-col md:flex-row gap-8 items-start">
-                   <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 ${
-                      ann.type === 'warning' ? 'bg-red-100 text-red-600' :
-                      ann.type === 'event' ? 'bg-purple-100 text-purple-600' :
-                      'bg-blue-100 text-blue-600'
-                   }`}>
-                      {ann.type === 'warning' ? <AlertTriangle className="w-8 h-8" /> : 
-                       ann.type === 'event' ? <CalendarIcon className="w-8 h-8" /> : 
-                       <Info className="w-8 h-8" />}
-                   </div>
-                   
-                   <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-3 mb-4">
-                         <Badge className={`${
-                            ann.type === 'warning' ? 'bg-red-50 text-red-600' :
-                            ann.type === 'event' ? 'bg-purple-50 text-purple-600' :
-                            'bg-blue-50 text-blue-600'
-                         } border-none font-black uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full`}>
-                            {ann.type}
-                         </Badge>
-                         <span className="text-xs font-bold text-slate-400 italic">Publié le {new Date(ann.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                      </div>
-                      
-                      <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight leading-tight">{ann.title}</h2>
-                      <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">{ann.content}</p>
-                   </div>
+             <article key={ann.id} className="border-b border-line bg-paper py-8 flex flex-col md:flex-row gap-6 items-start">
+                <div className={`w-12 h-12 border flex items-center justify-center flex-shrink-0 ${
+                   ann.type === 'warning' ? 'border-accent text-accent' : 'border-line text-soft'
+                }`}>
+                   {ann.type === 'warning' ? <AlertTriangle className="w-6 h-6" /> :
+                    ann.type === 'event' ? <CalendarIcon className="w-6 h-6" /> :
+                    <Info className="w-6 h-6" />}
                 </div>
-                <div className="h-2 bg-[#D32D3F]/5"></div>
-             </Card>
+
+                <div className="flex-1">
+                   <div className="flex flex-wrap items-center gap-3 mb-3">
+                      <Badge className="bg-paper border border-line text-soft mono uppercase tracking-widest text-[10px] px-3 py-1">
+                         {ann.type}
+                      </Badge>
+                      <span className="mono text-xs text-soft">Publié le {new Date(ann.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                   </div>
+
+                   <h2 className="text-2xl font-semibold text-ink mb-3 tracking-tight leading-tight">{ann.title}</h2>
+                   <p className="text-soft leading-relaxed whitespace-pre-wrap">{ann.content}</p>
+                </div>
+             </article>
            ))}
         </div>
       </div>

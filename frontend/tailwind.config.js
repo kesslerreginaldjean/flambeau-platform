@@ -38,8 +38,9 @@ module.exports = {
           foreground: "oklch(var(--muted-foreground) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "oklch(var(--accent) / <alpha-value>)",
-          foreground: "oklch(var(--accent-foreground) / <alpha-value>)",
+          DEFAULT: "var(--accent)",
+          foreground: "var(--paper)",
+          ink: "var(--accent-ink)",
         },
         popover: {
           DEFAULT: "oklch(var(--popover) / <alpha-value>)",
@@ -49,18 +50,31 @@ module.exports = {
           DEFAULT: "oklch(var(--card) / <alpha-value>)",
           foreground: "oklch(var(--card-foreground) / <alpha-value>)",
         },
-        // Couleurs de l'école
-        'school-cream': '#FFF8E7',
-        'school-red': '#D32D3F',
-        'school-white': '#FFFFFF',
+        // Système suisse — encre, papier, filets
+        ink: "var(--ink)",
+        paper: "var(--paper)",
+        soft: "var(--soft-ink)",
+        line: "var(--line)",
+        panel: "var(--panel)",
+        // Aliases hérités (pointent vers le nouveau système)
+        'school-cream': 'var(--panel)',
+        'school-red': 'var(--accent)',
+        'school-white': 'var(--paper)',
       },
       borderRadius: {
+        sm: "var(--radius)",
+        md: "var(--radius)",
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        xl: "var(--radius)",
+        "2xl": "var(--radius)",
+        "3xl": "var(--radius)",
       },
       fontFamily: {
-        sans: ['var(--font-sans)'],
+        sans: ['var(--font-sans)', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        mono: ['var(--font-mono)', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
+      },
+      maxWidth: {
+        grid: 'var(--maxw)',
       },
       animation: {
         'fade-in': 'fadeIn 0.8s ease-in',

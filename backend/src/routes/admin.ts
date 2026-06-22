@@ -3,7 +3,7 @@ import {
   getStats, getUsers, createUser, deleteUser, importUsers, getTeachers, getStudents,
   getPayments, createPayment, submitGrade, getAnnouncements, createAnnouncement, deleteAnnouncement,
   getStudentDetail, getSettings, updateSettings, getAdmissions, updateAdmissionStatus,
-  getAcademicInfo,
+  recordAdmissionScore, getAcademicInfo,
 } from '../controllers/adminController';
 import { verifyToken, requireRole } from '../middleware/auth';
 
@@ -21,6 +21,7 @@ router.get('/students/:id', getStudentDetail);
 router.get('/settings', getSettings);
 router.post('/settings', updateSettings);
 router.get('/admissions', getAdmissions);
+router.patch('/admissions/:id/score', recordAdmissionScore);
 router.patch('/admissions/:id/status', updateAdmissionStatus);
 router.get('/payments', getPayments);
 router.get('/announcements', getAnnouncements);

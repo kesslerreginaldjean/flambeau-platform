@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { MessageCircle, FileText, X, Bot } from 'lucide-react';
 import { useState } from 'react';
 import { AIChatbot } from './AIChatbot';
@@ -10,50 +9,43 @@ const FloatingCTA = () => {
 
   return (
     <>
-      <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end gap-4">
-        {/* Action Menu */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0, y: 20 }}
-          animate={isOpen ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0, y: 20 }}
-          className="flex flex-col gap-3 items-end mb-2"
-        >
-          <button onClick={() => { setIsChatOpen(true); setIsOpen(false); }}>
-            <div className="flex items-center gap-3 group">
-              <span className="px-4 py-2 bg-white text-slate-900 shadow-xl rounded-xl text-xs font-extrabold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity border border-slate-100">
-                Parler à IA CLF
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-px">
+        {/* Action menu */}
+        {isOpen && (
+          <div className="flex flex-col gap-px items-end mb-px">
+            <button
+              onClick={() => { setIsChatOpen(true); setIsOpen(false); }}
+              className="flex items-center gap-3 group"
+            >
+              <span className="px-3 py-1 bg-ink text-paper mono text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                Parler à l’IA CLF
               </span>
-              <div className="w-14 h-14 bg-gradient-to-br from-[#D32D3F] to-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center border border-white/20 hover:scale-110 transition-all transform hover:rotate-12">
-                <Bot className="w-6 h-6" />
-              </div>
-            </div>
-          </button>
+              <span className="w-12 h-12 bg-paper text-ink border border-line flex items-center justify-center hover:bg-ink hover:text-paper transition-colors">
+                <Bot className="w-5 h-5" />
+              </span>
+            </button>
 
-          <Link href="/admissions">
-            <div className="flex items-center gap-3 group">
-              <span className="px-4 py-2 bg-white text-slate-900 shadow-xl rounded-xl text-xs font-extrabold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity border border-slate-100">
+            <Link href="/admissions" className="flex items-center gap-3 group">
+              <span className="px-3 py-1 bg-ink text-paper mono text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
                 Admission
               </span>
-              <div className="w-14 h-14 bg-white text-[#D32D3F] rounded-2xl shadow-2xl flex items-center justify-center border border-slate-100 hover:bg-[#D32D3F] hover:text-white transition-all transform hover:-rotate-12">
-                <FileText className="w-6 h-6" />
-              </div>
-            </div>
-          </Link>
-        </motion.div>
+              <span className="w-12 h-12 bg-paper text-ink border border-line flex items-center justify-center hover:bg-ink hover:text-paper transition-colors">
+                <FileText className="w-5 h-5" />
+              </span>
+            </Link>
+          </div>
+        )}
 
-        {/* Main Toggle Button */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+        {/* Main toggle */}
+        <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-16 h-16 rounded-[1.5rem] shadow-2xl flex items-center justify-center text-white transition-all duration-500 transform ${
-            isOpen ? 'bg-slate-900 rotate-90' : 'bg-[#D32D3F] hover:bg-[#8B1A26] shadow-[#D32D3F]/40'
+          aria-label="Menu d’actions"
+          className={`w-14 h-14 flex items-center justify-center text-paper transition-colors ${
+            isOpen ? 'bg-ink' : 'bg-accent hover:bg-accent-ink'
           }`}
         >
-          {isOpen ? <X className="w-8 h-8" /> : <MessageCircle className="w-8 h-8" />}
-          {!isOpen && (
-             <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FDE68A] rounded-full animate-ping"></span>
-          )}
-        </motion.button>
+          {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        </button>
       </div>
 
       <AIChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
