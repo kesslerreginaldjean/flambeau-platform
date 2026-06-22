@@ -226,12 +226,14 @@ model Admission {
   parentEmail           String
   parentPhone           String
   level                 String
-  status                String    @default("NEW") // NEW, TEST_SCHEDULED, VALIDATED, REJECTED
+  status                String    @default("NEW") // NEW, TEST_SCHEDULED, TEST_TAKEN, VALIDATED, REJECTED
   birthCertificateUrl   String?
   reportCardUrl         String?
   identityPhotosUrl     String?
   medicalCertificateUrl String?
   testDate              DateTime?
+  testScore             Float?    // note obtenue à l'examen d'entrée (/100)
+  studentNumber         String?   // ID unique généré à la validation (STU-AAAA-NNNN)
   notes                 String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt

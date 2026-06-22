@@ -5,17 +5,16 @@ import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Plus, 
-  Calendar as CalendarIcon, 
-  Clock, 
-  MapPin, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
   Trash2,
   AlertCircle
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { authFetch } from "@/lib/authFetch";
 export default function AdminCalendar() {
@@ -23,7 +22,7 @@ export default function AdminCalendar() {
   const [events, setEvents] = useState<any[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -89,7 +88,7 @@ export default function AdminCalendar() {
   const days = [];
   // Empty spaces for previous month
   for (let i = 0; i < (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1); i++) {
-    days.push(<div key={`empty-${i}`} className="h-32 border-b border-r border-slate-50 bg-slate-50/30"></div>);
+    days.push(<div key={`empty-${i}`} className="h-32 border-b border-r border-line bg-panel"></div>);
   }
   // Days of current month
   for (let d = 1; d <= daysInMonth; d++) {
@@ -100,19 +99,17 @@ export default function AdminCalendar() {
     });
 
     days.push(
-      <div key={d} className={`h-32 border-b border-r border-slate-100 p-2 relative hover:bg-slate-50 transition-colors ${isToday ? 'bg-blue-50/30' : 'bg-white'}`}>
-        <span className={`text-sm font-bold ${isToday ? 'w-7 h-7 bg-[#D32D3F] text-white rounded-full flex items-center justify-center' : 'text-slate-400'}`}>
+      <div key={d} className={`h-32 border-b border-r border-line p-2 relative transition-colors ${isToday ? 'border-accent bg-paper' : 'bg-paper hover:bg-panel'}`}>
+        <span className={`numeral text-sm ${isToday ? 'w-7 h-7 bg-ink text-paper flex items-center justify-center' : 'text-soft'}`}>
           {d}
         </span>
         <div className="mt-1 space-y-1 overflow-y-auto max-h-[80px]">
           {dayEvents.map(event => (
-            <div 
+            <div
               key={event.id}
-              className={`text-[9px] font-bold px-2 py-1 rounded-lg truncate ${
-                event.type === 'exam' ? 'bg-red-100 text-red-700' :
-                event.type === 'meeting' ? 'bg-purple-100 text-purple-700' :
-                event.type === 'holiday' ? 'bg-amber-100 text-amber-700' :
-                'bg-blue-100 text-blue-700'
+              className={`mono text-[9px] uppercase tracking-wider px-2 py-1 truncate border-l-2 ${
+                event.type === 'exam' ? 'border-accent text-accent bg-panel' :
+                'border-line text-ink bg-panel'
               }`}
             >
               {event.title}
@@ -129,34 +126,35 @@ export default function AdminCalendar() {
         <title>Agenda Académique | CLF</title>
       </Head>
 
-      <div className="p-6">
-        <div className="flex justify-between items-end mb-8">
+      <div>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 pb-6 border-b border-line">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Agenda Académique</h1>
-            <p className="text-slate-500 font-medium">Gérez le calendrier, les examens et les événements de l'école.</p>
+            <p className="kicker mb-2">Communication</p>
+            <h1 className="text-3xl font-semibold text-ink tracking-tight">Agenda Académique</h1>
+            <p className="text-soft mt-1">Gérez le calendrier, les examens et les événements de l'école.</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)} className="bg-[#D32D3F] hover:bg-[#8B1A26] text-white rounded-2xl px-6 py-6 shadow-lg shadow-[#D32D3F]/20 flex gap-2 font-bold transform hover:scale-105 active:scale-95 transition-all">
-            <Plus className="w-5 h-5" /> Ajouter un événement
+          <Button onClick={() => setShowAddModal(true)} className="btn-accent shrink-0">
+            <Plus className="w-4 h-4" /> Ajouter un événement
           </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar Grid */}
-          <Card className="lg:col-span-3 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-            <CardHeader className="bg-white border-b border-slate-50 p-6 flex flex-row items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900 capitalize">{monthName}</h2>
+          <Card className="lg:col-span-3 border border-line bg-paper">
+            <CardHeader className="bg-paper border-b border-line p-6 flex flex-row items-center justify-between">
+              <h2 className="text-xl font-semibold text-ink capitalize">{monthName}</h2>
               <div className="flex gap-2">
-                <Button variant="ghost" size="icon" onClick={prevMonth} className="rounded-xl border border-slate-100"><ChevronLeft className="w-5 h-5" /></Button>
-                <Button variant="ghost" size="icon" onClick={nextMonth} className="rounded-xl border border-slate-100"><ChevronRight className="w-5 h-5" /></Button>
+                <Button variant="ghost" size="icon" onClick={prevMonth} className="border border-line hover:bg-ink hover:text-paper"><ChevronLeft className="w-5 h-5" /></Button>
+                <Button variant="ghost" size="icon" onClick={nextMonth} className="border border-line hover:bg-ink hover:text-paper"><ChevronRight className="w-5 h-5" /></Button>
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="grid grid-cols-7 text-center border-b border-slate-100 bg-slate-50/50 py-3">
+              <div className="grid grid-cols-7 text-center border-b border-line bg-panel py-3">
                 {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
-                  <span key={day} className="text-xs font-black text-slate-400 uppercase tracking-widest">{day}</span>
+                  <span key={day} className="mono text-xs uppercase tracking-widest text-soft">{day}</span>
                 ))}
               </div>
-              <div className="grid grid-cols-7 border-l border-slate-100">
+              <div className="grid grid-cols-7 border-l border-line">
                 {days}
               </div>
             </CardContent>
@@ -164,53 +162,46 @@ export default function AdminCalendar() {
 
           {/* Upcoming Events List */}
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-[#D32D3F]" /> Prochainement
+            <h3 className="text-xl font-semibold text-ink flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 text-accent" /> Prochainement
             </h3>
-            <div className="space-y-4 h-[calc(100vh-280px)] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-px h-[calc(100vh-280px)] overflow-y-auto pr-2 custom-scrollbar">
                {events.filter(e => new Date(e.startDate) >= new Date()).map((event) => (
-                 <motion.div 
+                 <div
                    key={event.id}
-                   initial={{ opacity: 0, x: 20 }}
-                   animate={{ opacity: 1, x: 0 }}
-                   className="bg-white p-5 rounded-[2rem] shadow-md border border-slate-50 relative group overflow-hidden"
+                   className="bg-paper p-5 border border-line relative group"
                  >
-                    <div className={`absolute top-0 left-0 w-1.5 h-full ${
-                       event.type === 'exam' ? 'bg-red-500' :
-                       event.type === 'meeting' ? 'bg-purple-500' :
-                       event.type === 'holiday' ? 'bg-amber-500' :
-                       'bg-blue-500'
+                    <div className={`absolute top-0 left-0 w-1 h-full ${
+                       event.type === 'exam' ? 'bg-accent' : 'bg-ink'
                     }`}></div>
-                    <div className="flex justify-between items-start mb-2">
-                       <span className={`text-[10px] font-black uppercase tracking-widest ${
-                          event.type === 'exam' ? 'text-red-500' :
-                          event.type === 'meeting' ? 'text-purple-500' :
-                          'text-blue-500'
+                    <div className="flex justify-between items-start mb-2 pl-2">
+                       <span className={`mono text-[10px] uppercase tracking-widest ${
+                          event.type === 'exam' ? 'text-accent' : 'text-soft'
                        }`}>{event.type}</span>
-                       <button onClick={() => handleDeleteEvent(event.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-500">
+                       <button onClick={() => handleDeleteEvent(event.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-soft hover:text-accent">
                           <Trash2 className="w-4 h-4" />
                        </button>
                     </div>
-                    <h4 className="font-bold text-slate-900 mb-3">{event.title}</h4>
-                    <div className="space-y-2">
-                       <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold">
+                    <h4 className="font-semibold text-ink mb-3 pl-2">{event.title}</h4>
+                    <div className="space-y-2 pl-2">
+                       <div className="flex items-center gap-2 text-soft mono text-[10px]">
                           <Clock className="w-3 h-3" />
                           {new Date(event.startDate).toLocaleDateString()} • {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                        </div>
                        {event.location && (
-                         <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold">
+                         <div className="flex items-center gap-2 text-soft mono text-[10px]">
                             <MapPin className="w-3 h-3" />
                             {event.location}
                          </div>
                        )}
                     </div>
-                 </motion.div>
+                 </div>
                ))}
-               
+
                {events.length === 0 && !loading && (
-                  <div className="text-center py-12 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-                     <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aucun événement</p>
+                  <div className="text-center py-12 bg-panel border border-line">
+                     <AlertCircle className="w-8 h-8 text-soft mx-auto mb-3" />
+                     <p className="mono text-xs text-soft uppercase tracking-widest">Aucun événement</p>
                   </div>
                )}
             </div>
@@ -219,68 +210,64 @@ export default function AdminCalendar() {
       </div>
 
       {/* Add Event Modal */}
-      <AnimatePresence>
-        {showAddModal && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowAddModal(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
-            ></motion.div>
-            <motion.div 
-              initial={{ scale: 0.9, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              className="relative w-full max-w-md bg-white rounded-[3rem] shadow-2xl overflow-hidden"
-            >
-              <div className="bg-[#D32D3F] p-8 text-white">
-                 <h2 className="text-2xl font-bold flex items-center gap-2">
-                   <Plus className="w-6 h-6" /> Nouvel événement
-                 </h2>
-                 <p className="opacity-70 text-sm mt-1">Planifiez une activité sur le calendrier.</p>
+      {showAddModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6">
+          <div
+            onClick={() => setShowAddModal(false)}
+            className="absolute inset-0"
+            style={{ background: 'rgba(17,19,21,.6)' }}
+          ></div>
+          <div className="relative w-full max-w-md bg-paper border border-line overflow-hidden">
+            <div className="bg-ink p-8 text-paper">
+               <p className="mono text-xs uppercase tracking-widest text-paper/60 mb-2">Calendrier</p>
+               <h2 className="text-2xl font-semibold flex items-center gap-2">
+                 <Plus className="w-6 h-6" /> Nouvel événement
+               </h2>
+               <p className="text-paper/70 text-sm mt-1">Planifiez une activité sur le calendrier.</p>
+            </div>
+            <form onSubmit={handleAddEvent} className="p-8 space-y-5">
+              <div className="space-y-1">
+                <label className="mono text-xs text-soft uppercase tracking-widest">Titre</label>
+                <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Ex: Examen de Maths" />
               </div>
-              <form onSubmit={handleAddEvent} className="p-8 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Titre</label>
-                  <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="rounded-xl bg-slate-50 border-none h-12" placeholder="Ex: Examen de Maths" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Début</label>
-                    <Input required type="datetime-local" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="rounded-xl bg-slate-50 border-none h-12 text-xs" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Fin</label>
-                    <Input required type="datetime-local" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="rounded-xl bg-slate-50 border-none h-12 text-xs" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Type</label>
-                      <select className="w-full h-12 px-3 bg-slate-50 rounded-xl text-sm outline-none" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
-                        <option value="class">Cours</option>
-                        <option value="exam">Examen</option>
-                        <option value="meeting">Réunion</option>
-                        <option value="holiday">Congé</option>
-                        <option value="event">Événement</option>
-                      </select>
-                   </div>
-                   <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Lieu</label>
-                      <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="rounded-xl bg-slate-50 border-none h-12" placeholder="Ex: Salle 12" />
-                   </div>
+                  <label className="mono text-xs text-soft uppercase tracking-widest">Début</label>
+                  <Input required type="datetime-local" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="text-xs" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Description</label>
-                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full h-24 p-3 bg-slate-50 rounded-xl text-sm outline-none resize-none" placeholder="Détails supplémentaires..." />
+                  <label className="mono text-xs text-soft uppercase tracking-widest">Fin</label>
+                  <Input required type="datetime-local" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="text-xs" />
                 </div>
-                <div className="flex gap-4 pt-4">
-                   <Button type="button" variant="ghost" onClick={() => setShowAddModal(false)} className="flex-1 rounded-2xl py-6 font-bold">Annuler</Button>
-                   <Button type="submit" className="flex-1 bg-[#D32D3F] hover:bg-[#8B1A26] text-white rounded-2xl py-6 font-bold shadow-lg shadow-[#D32D3F]/20">Créer</Button>
-                </div>
-              </form>
-            </motion.div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="space-y-1">
+                    <label className="mono text-xs text-soft uppercase tracking-widest">Type</label>
+                    <select className="w-full text-sm" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                      <option value="class">Cours</option>
+                      <option value="exam">Examen</option>
+                      <option value="meeting">Réunion</option>
+                      <option value="holiday">Congé</option>
+                      <option value="event">Événement</option>
+                    </select>
+                 </div>
+                 <div className="space-y-1">
+                    <label className="mono text-xs text-soft uppercase tracking-widest">Lieu</label>
+                    <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="Ex: Salle 12" />
+                 </div>
+              </div>
+              <div className="space-y-1">
+                <label className="mono text-xs text-soft uppercase tracking-widest">Description</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full h-24 p-3 text-sm resize-none" placeholder="Détails supplémentaires..." />
+              </div>
+              <div className="flex gap-4 pt-4">
+                 <Button type="button" variant="ghost" onClick={() => setShowAddModal(false)} className="flex-1 border border-line hover:bg-ink hover:text-paper">Annuler</Button>
+                 <Button type="submit" className="btn-accent flex-1">Créer</Button>
+              </div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </AppLayout>
   );
 }

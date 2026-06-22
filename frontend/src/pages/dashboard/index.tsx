@@ -36,10 +36,10 @@ export default function DashboardRedirect() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-paper">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-[#D32D3F] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-500 font-bold animate-pulse">Chargement de votre espace personnel...</p>
+        <div className="w-10 h-10 border-2 border-line border-t-accent animate-spin"></div>
+        <p className="mono text-xs uppercase tracking-widest text-soft">Chargement de votre espace personnel…</p>
       </div>
     </div>
   );

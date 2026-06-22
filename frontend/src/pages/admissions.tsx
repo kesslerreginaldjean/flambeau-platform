@@ -1,44 +1,149 @@
 import { useState } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { z } from 'zod';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
 import FadeIn from '@/components/FadeIn';
-import { FileText, Users, Search, CheckCircle2, Info, Upload, ArrowRight, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
 
-import { authFetch } from "@/lib/authFetch";
+import { authFetch } from '@/lib/authFetch';
+
+type FormState = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  level: string;
+  message: string;
+  birthCertificate: File | null;
+  reportCard: File | null;
+  identityPhotos: File | null;
+  medicalCertificate: File | null;
+};
+
+const initialForm: FormState = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  level: '',
+  message: '',
+  birthCertificate: null,
+  reportCard: null,
+  identityPhotos: null,
+  medicalCertificate: null,
+};
+
+// ============================================================
+// Validation Zod — un schéma par étape
+// ============================================================
+const stepStudentSchema = z.object({
+  firstName: z.string().trim().min(2, 'Le prénom est requis.'),
+  lastName: z.string().trim().min(2, 'Le nom est requis.'),
+  level: z.string().min(1, 'Veuillez choisir un niveau.'),
+});
+
+const stepParentSchema = z.object({
+  email: z.string().trim().min(1, "L'email est requis.").email('Adresse email invalide.'),
+  phone: z
+    .string()
+    .trim()
+    .min(6, 'Numéro de téléphone invalide.')
+    .regex(/^[+()\d\s-]+$/, 'Numéro de téléphone invalide.'),
+  message: z.string().optional(),
+});
+
+const stepDocumentsSchema = z.object({
+  birthCertificate: z.instanceof(File, { message: "L'acte de naissance est requis." }),
+  reportCard: z.instanceof(File, { message: 'Le dernier bulletin est requis.' }),
+  identityPhotos: z.instanceof(File, { message: "Les photos d'identité sont requises." }),
+});
+
+const stepSchemas = [stepStudentSchema, stepParentSchema, stepDocumentsSchema] as const;
+
+const documents = [
+  { name: 'birthCertificate', label: 'Acte de naissance', required: true },
+  { name: 'reportCard', label: 'Dernier bulletin', required: true },
+  { name: 'identityPhotos', label: "Photos d'identité", required: true },
+  { name: 'medicalCertificate', label: 'Certificat médical', required: false },
+] as const;
+
+const stepLabels = [
+  { n: '01', title: 'Infos élève' },
+  { n: '02', title: 'Coordonnées parents' },
+  { n: '03', title: 'Documents' },
+  { n: '04', title: 'Confirmation' },
+];
+
 export default function Admissions() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    level: '',
-    message: '',
-    birthCertificate: null,
-    reportCard: null,
-    identityPhotos: null,
-    medicalCertificate: null
-  });
-
+  const [formData, setFormData] = useState<FormState>(initialForm);
+  const [step, setStep] = useState(0); // 0..3
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [admissionId, setAdmissionId] = useState<string | null>(null);
 
   const handleChange = (e: any) => {
     const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value
-    });
+    const next = files ? (files[0] ?? null) : value;
+    setFormData((prev) => ({ ...prev, [name]: next }));
+    // Temps réel : on efface l'erreur du champ dès correction.
+    if (errors[name]) {
+      setErrors((prev) => {
+        const { [name]: _omit, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
+  // Valide l'étape courante ; renvoie true si valide, sinon pose les erreurs.
+  const validateStep = (index: number): boolean => {
+    if (index >= stepSchemas.length) return true; // étape 04 = récap, pas de schéma
+    const schema = stepSchemas[index];
+    const result = schema.safeParse(formData);
+    if (result.success) {
+      setErrors({});
+      return true;
+    }
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of result.error.issues) {
+      const key = String(issue.path[0]);
+      if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    setErrors(fieldErrors);
+    return false;
+  };
+
+  const next = () => {
+    if (validateStep(step)) {
+      setStep((s) => Math.min(s + 1, stepLabels.length - 1));
+    }
+  };
+
+  const back = () => {
+    setErrors({});
+    setStep((s) => Math.max(s - 1, 0));
+  };
+
+  const handleSubmit = async () => {
+    // Filet de sécurité : revalide les étapes à champs requis avant POST.
+    for (let i = 0; i < stepSchemas.length; i++) {
+      if (!validateStep(i)) {
+        setStep(i);
+        return;
+      }
+    }
+
     setLoading(true);
-    
+    setSubmitError('');
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const data = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
-        if (value) data.append(key, value);
+        if (value) data.append(key, value as string | Blob);
       });
 
       const response = await authFetch(`${apiUrl}/api/admissions`, {
@@ -46,237 +151,493 @@ export default function Admissions() {
         body: data,
       });
 
-      if (!response.ok) throw new Error('Erreur lors de l\'envoi');
+      if (!response.ok) throw new Error("Erreur lors de l'envoi");
 
-      alert('Votre dossier a été soumis avec succès ! Nous allons l\'étudier avec attention et nous vous contacterons pour organiser un entretien avec le secrétariat.');
-      setFormData({
-        firstName: '', lastName: '', email: '', phone: '', level: '', message: '',
-        birthCertificate: null, reportCard: null, identityPhotos: null, medicalCertificate: null
-      });
+      const result = await response.json().catch(() => ({}));
+      setAdmissionId(result.admissionId ?? '—');
     } catch (error) {
-      alert('Une erreur est survenue. Veuillez réessayer ou contacter le secrétariat.');
+      setSubmitError('Une erreur est survenue. Veuillez réessayer ou contacter le secrétariat.');
     } finally {
       setLoading(false);
     }
   };
 
+  const errorText = (name: string) =>
+    errors[name] ? <p className="text-accent text-xs mt-2">{errors[name]}</p> : null;
+
+  // ============================================================
+  // Panneau de confirmation après succès
+  // ============================================================
+  if (admissionId) {
+    return (
+      <div className="min-h-screen flex flex-col bg-paper">
+        <SEO title="Dossier soumis" description="Votre demande d'admission a bien été reçue." />
+        <Header />
+        <main className="flex-1 pt-20">
+          <section style={{ paddingBlock: 'calc(var(--lh) * 4)' }}>
+            <div className="container">
+              <div className="swiss-grid">
+                <div className="col-span-12 lg:col-span-8">
+                  <FadeIn>
+                    <p className="kicker mb-4">Dossier reçu</p>
+                    <h1 className="text-ink mb-6">Votre candidature a bien été soumise.</h1>
+                    <p className="text-soft text-lg max-w-2xl mb-12">
+                      Nous allons l'étudier avec attention et vous contacterons pour organiser un
+                      entretien avec le secrétariat.
+                    </p>
+
+                    <div className="border border-line" style={{ padding: 'var(--lh)' }}>
+                      <p className="mono text-xs uppercase tracking-widest text-soft mb-2">
+                        Numéro de dossier
+                      </p>
+                      <p className="numeral text-accent text-4xl mb-8">{admissionId}</p>
+                      <div className="pt-6 border-t border-line flex flex-wrap gap-4">
+                        <Link href="/suivi" className="btn-accent">
+                          Suivre mon dossier
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                        <Link href="/" className="btn-secondary">
+                          Retour à l'accueil
+                        </Link>
+                      </div>
+                    </div>
+                  </FadeIn>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white">
-      <SEO 
-        title="Admission en ligne" 
+    <div className="min-h-screen flex flex-col bg-paper">
+      <SEO
+        title="Admission en ligne"
         description="Simplifiez l'avenir de votre enfant. Soumettez votre demande d'admission au Collège Le Flambeau directement en ligne en quelques minutes."
       />
       <Header />
 
-      <main className="pt-20 overflow-hidden">
-        {/* Header - Serious & Reassuring */}
-        <section className="py-32 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-[#D32D3F]/5 skew-x-[-20deg] translate-x-20"></div>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      <main className="flex-1 pt-20">
+        {/* Hero — image-led band */}
+        <section className="relative border-b border-line overflow-hidden">
+          <motion.img
+            src="/images/school_facade_wide.jpg"
+            alt="Façade du Collège Le Flambeau"
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ scale: 1.08 }}
+            whileInView={{ scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.2, ease: [0.21, 0.47, 0.32, 0.98] }}
+          />
+          <div className="absolute inset-0" style={{ background: 'rgba(17,19,21,.72)' }} />
+          <div
+            className="container relative"
+            style={{ paddingBlock: 'calc(var(--lh) * 4)' }}
+          >
             <FadeIn>
-              <h1 className="text-sm font-bold uppercase tracking-[0.4em] mb-6 text-[#FDE68A]">Inscriptions 2026-2027</h1>
-              <h2 className="text-5xl md:text-7xl font-extrabold leading-tight mb-8">
-                Préparez le futur <br /> dès aujourd'hui.
-              </h2>
-              <p className="text-xl text-slate-400 max-w-2xl mx-auto font-medium">
-                Un processus d'admission simple, transparent et entièrement numérisé pour votre confort.
-              </p>
+              <div className="swiss-grid items-end">
+                <div className="col-span-12 lg:col-span-8">
+                  <p className="kicker mb-4" style={{ color: 'rgba(255,255,255,.7)' }}>
+                    Inscriptions 2026–2027
+                  </p>
+                  <h1 className="mb-6" style={{ color: '#ffffff' }}>
+                    Préparez le futur dès aujourd'hui.
+                  </h1>
+                  <p className="text-lg max-w-2xl" style={{ color: 'rgba(255,255,255,.82)' }}>
+                    Un processus d'admission simple, transparent et entièrement numérisé pour votre
+                    confort.
+                  </p>
+                </div>
+              </div>
             </FadeIn>
           </div>
         </section>
 
-        <section className="py-32 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-24">
-              
-              {/* Process Steps */}
-              <div className="space-y-16">
-                <FadeIn direction="right">
-                  <h3 className="text-4xl font-bold text-slate-900 mb-12">Le parcours d'admission</h3>
-                  <div className="space-y-12">
-                    {[
-                      { icon: FileText, title: 'Candidature en ligne', text: 'Remplissez le formulaire et téléchargez les pièces requises en toute sécurité.' },
-                      { icon: Search, title: 'Étude du dossier', text: 'Notre direction examine attentivement le parcours et les besoins de l\'enfant.' },
-                      { icon: Users, title: 'Entretien de motivation', text: 'Une rencontre pour échanger sur notre vision et les objectifs de l\'élève.' },
-                      { icon: CheckCircle2, title: 'Confirmation finale', text: 'Une fois admis, vous recevez vos accès au portail et l\'uniforme de l\'école.' }
-                    ].map((step, i) => (
-                      <div key={i} className="flex gap-8 group">
-                        <div className="w-16 h-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 text-[#D32D3F] group-hover:bg-[#D32D3F] group-hover:text-white transition-all duration-300 shadow-sm">
-                          <step.icon className="w-7 h-7" />
-                        </div>
-                        <div>
-                          <h4 className="text-2xl font-bold text-slate-900 mb-2">{step.title}</h4>
-                          <p className="text-slate-600 font-medium leading-relaxed">{step.text}</p>
+        <section style={{ paddingBlock: 'calc(var(--lh) * 4)' }}>
+          <div className="container">
+            {/* Indicateur d'étapes */}
+            <FadeIn>
+              <div className="border-t border-ink pt-6 mb-4">
+                <div className="swiss-grid">
+                  {stepLabels.map((s, i) => {
+                    const isActive = i === step;
+                    const isDone = i < step;
+                    return (
+                      <div key={s.n} className="col-span-6 md:col-span-3">
+                        <div
+                          className={`border-t pt-3 ${isActive ? 'border-accent' : 'border-line'}`}
+                        >
+                          <span
+                            className={`numeral text-3xl ${
+                              isActive ? 'text-accent' : isDone ? 'text-ink' : 'text-soft'
+                            }`}
+                          >
+                            {s.n}
+                          </span>
+                          <p
+                            className={`mono text-xs uppercase tracking-wider mt-2 ${
+                              isActive ? 'text-ink' : 'text-soft'
+                            }`}
+                          >
+                            {isDone ? '— ' : ''}
+                            {s.title}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </FadeIn>
+                    );
+                  })}
+                </div>
+              </div>
+            </FadeIn>
 
-                <FadeIn direction="up" delay={0.4} className="p-10 bg-[#FFF8E7]/50 rounded-[3rem] border border-[#FDE68A]/30 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#FDE68A]/20 blur-3xl rounded-full"></div>
-                  <div className="flex gap-4 items-start mb-8 relative z-10">
-                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                        <Info className="w-5 h-5 text-[#D32D3F]" />
-                     </div>
-                     <p className="font-bold text-slate-900 uppercase tracking-widest text-xs mt-2">Dossier de candidature</p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
-                    {['Acte de naissance', 'Dernier bulletin scolaire', '2 photos d\'identité', 'Certificat médical'].map((p, i) => (
-                      <div key={i} className="flex items-center gap-3 text-slate-700 font-bold text-xs uppercase tracking-wide">
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
-                        {p}
+            <div className="mb-12">
+              <Link
+                href="/suivi"
+                className="mono text-xs uppercase tracking-widest text-accent inline-flex items-center gap-1"
+              >
+                Suivre mon dossier
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+
+            <div className="swiss-grid">
+              <div className="col-span-12 lg:col-span-8">
+                <FadeIn>
+                  <div className="border border-line rounded-lg" style={{ padding: 'var(--lh)' }}>
+                    {/* ---------- Étape 01 — Infos élève ---------- */}
+                    {step === 0 && (
+                      <div>
+                        <p className="kicker mb-4">Étape 01</p>
+                        <h2 className="text-ink mb-10">Informations de l'élève</h2>
+                        <div className="swiss-grid">
+                          <div className="col-span-12 md:col-span-6">
+                            <label
+                              htmlFor="firstName"
+                              className="mono text-xs uppercase tracking-widest text-soft block mb-2"
+                            >
+                              Prénom de l'élève
+                            </label>
+                            <input
+                              id="firstName"
+                              type="text"
+                              name="firstName"
+                              value={formData.firstName}
+                              onChange={handleChange}
+                              placeholder="Ex: Jean"
+                            />
+                            {errorText('firstName')}
+                          </div>
+                          <div className="col-span-12 md:col-span-6">
+                            <label
+                              htmlFor="lastName"
+                              className="mono text-xs uppercase tracking-widest text-soft block mb-2"
+                            >
+                              Nom de l'élève
+                            </label>
+                            <input
+                              id="lastName"
+                              type="text"
+                              name="lastName"
+                              value={formData.lastName}
+                              onChange={handleChange}
+                              placeholder="Ex: Durand"
+                            />
+                            {errorText('lastName')}
+                          </div>
+                          <div className="col-span-12">
+                            <label
+                              htmlFor="level"
+                              className="mono text-xs uppercase tracking-widest text-soft block mb-2"
+                            >
+                              Niveau souhaité
+                            </label>
+                            <select
+                              id="level"
+                              name="level"
+                              value={formData.level}
+                              onChange={handleChange}
+                            >
+                              <option value="">Choisissez un niveau</option>
+                              <optgroup label="Le Jardin Vert de Cassandre">
+                                <option value="1ère Maternelle">1ère Année Maternelle</option>
+                                <option value="2ème Maternelle">2ème Année Maternelle</option>
+                                <option value="3ème Maternelle">3ème Année Maternelle</option>
+                              </optgroup>
+                              <optgroup label="Cycle Fondamental">
+                                <option value="1ère AF">1ère AF</option>
+                                <option value="2ème AF">2ème AF</option>
+                                <option value="3ème AF">3ème AF</option>
+                                <option value="4ème AF">4ème AF</option>
+                                <option value="5ème AF">5ème AF</option>
+                                <option value="6ème AF">6ème AF</option>
+                                <option value="7ème AF">7ème AF</option>
+                                <option value="8ème AF">8ème AF</option>
+                                <option value="9ème AF">9ème AF</option>
+                              </optgroup>
+                              <optgroup label="Nouveau Secondaire">
+                                <option value="NS1">NS1</option>
+                                <option value="NS2">NS2</option>
+                                <option value="NS3">NS3</option>
+                                <option value="NS4 (Terminale)">NS4 (Terminale)</option>
+                              </optgroup>
+                            </select>
+                            {errorText('level')}
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="mt-10 pt-6 border-t border-[#FDE68A]/50 flex items-center gap-3 text-slate-500">
-                    <ShieldCheck className="w-5 h-5 text-[#D32D3F]" />
-                    <p className="text-xs font-bold italic">Vos données sont protégées et traitées avec confidentialité.</p>
+                    )}
+
+                    {/* ---------- Étape 02 — Coordonnées parents ---------- */}
+                    {step === 1 && (
+                      <div>
+                        <p className="kicker mb-4">Étape 02</p>
+                        <h2 className="text-ink mb-10">Coordonnées des parents</h2>
+                        <div className="swiss-grid">
+                          <div className="col-span-12 md:col-span-6">
+                            <label
+                              htmlFor="email"
+                              className="mono text-xs uppercase tracking-widest text-soft block mb-2"
+                            >
+                              Email du tuteur
+                            </label>
+                            <input
+                              id="email"
+                              type="email"
+                              name="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              placeholder="email@exemple.com"
+                            />
+                            {errorText('email')}
+                          </div>
+                          <div className="col-span-12 md:col-span-6">
+                            <label
+                              htmlFor="phone"
+                              className="mono text-xs uppercase tracking-widest text-soft block mb-2"
+                            >
+                              Téléphone
+                            </label>
+                            <input
+                              id="phone"
+                              type="tel"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleChange}
+                              placeholder="+509 0000-0000"
+                            />
+                            {errorText('phone')}
+                          </div>
+                          <div className="col-span-12">
+                            <label
+                              htmlFor="message"
+                              className="mono text-xs uppercase tracking-widest text-soft block mb-2"
+                            >
+                              Message (optionnel)
+                            </label>
+                            <textarea
+                              id="message"
+                              name="message"
+                              value={formData.message}
+                              onChange={handleChange}
+                              rows={4}
+                              placeholder="Une information à transmettre au secrétariat ?"
+                            />
+                            {errorText('message')}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ---------- Étape 03 — Documents ---------- */}
+                    {step === 2 && (
+                      <div>
+                        <p className="kicker mb-4">Étape 03</p>
+                        <h2 className="text-ink mb-6">Pièces justificatives</h2>
+                        <div className="flex flex-wrap justify-between items-baseline gap-2 mb-6">
+                          <p className="mono text-xs uppercase tracking-widest text-accent">
+                            Pièces jointes obligatoires
+                          </p>
+                          <p className="mono text-xs uppercase tracking-wider text-soft">
+                            JPG, PNG, PDF — max 5MB
+                          </p>
+                        </div>
+                        <div className="swiss-grid">
+                          {documents.map((doc) => {
+                            const file = (formData as any)[doc.name] as File | null;
+                            return (
+                              <div key={doc.name} className="col-span-12 md:col-span-6">
+                                <label
+                                  htmlFor={doc.name}
+                                  className={`flex flex-col justify-center w-full h-24 border cursor-pointer px-4 transition-colors ${
+                                    errors[doc.name]
+                                      ? 'border-accent'
+                                      : file
+                                      ? 'border-accent'
+                                      : 'border-line hover:border-ink'
+                                  }`}
+                                >
+                                  <span className="mono text-xs uppercase tracking-wider text-soft mb-1">
+                                    {doc.label} {doc.required ? '*' : ''}
+                                  </span>
+                                  <span
+                                    className={`text-sm truncate ${
+                                      file ? 'text-accent' : 'text-soft'
+                                    }`}
+                                  >
+                                    {file ? file.name : 'Sélectionner un fichier'}
+                                  </span>
+                                  <input
+                                    id={doc.name}
+                                    type="file"
+                                    name={doc.name}
+                                    className="hidden"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={handleChange}
+                                  />
+                                </label>
+                                {errorText(doc.name)}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ---------- Étape 04 — Confirmation ---------- */}
+                    {step === 3 && (
+                      <div>
+                        <p className="kicker mb-4">Étape 04</p>
+                        <h2 className="text-ink mb-10">Vérification du dossier</h2>
+
+                        <dl className="space-y-0">
+                          {[
+                            { k: 'Prénom', v: formData.firstName },
+                            { k: 'Nom', v: formData.lastName },
+                            { k: 'Niveau', v: formData.level },
+                            { k: 'Email', v: formData.email },
+                            { k: 'Téléphone', v: formData.phone },
+                            { k: 'Message', v: formData.message || '—' },
+                          ].map((row) => (
+                            <div
+                              key={row.k}
+                              className="flex justify-between gap-4 py-3 border-t border-line"
+                            >
+                              <dt className="mono text-xs uppercase tracking-wider text-soft">
+                                {row.k}
+                              </dt>
+                              <dd className="text-ink text-sm text-right">{row.v}</dd>
+                            </div>
+                          ))}
+                          {documents.map((doc) => {
+                            const file = (formData as any)[doc.name] as File | null;
+                            return (
+                              <div
+                                key={doc.name}
+                                className="flex justify-between gap-4 py-3 border-t border-line"
+                              >
+                                <dt className="mono text-xs uppercase tracking-wider text-soft">
+                                  {doc.label}
+                                </dt>
+                                <dd
+                                  className={`text-sm text-right truncate ${
+                                    file ? 'text-ink' : 'text-soft'
+                                  }`}
+                                >
+                                  {file ? file.name : '—'}
+                                </dd>
+                              </div>
+                            );
+                          })}
+                        </dl>
+
+                        {submitError && (
+                          <p className="text-accent text-sm mt-6 border-t border-line pt-4">
+                            {submitError}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ---------- Navigation ---------- */}
+                    <div className="mt-10 pt-6 border-t border-line flex flex-wrap gap-4 justify-between">
+                      {step > 0 ? (
+                        <button type="button" onClick={back} className="btn-secondary">
+                          <ArrowLeft className="w-4 h-4" />
+                          Précédent
+                        </button>
+                      ) : (
+                        <span />
+                      )}
+
+                      {step < stepLabels.length - 1 ? (
+                        <button type="button" onClick={next} className="btn-accent">
+                          Suivant
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleSubmit}
+                          disabled={loading}
+                          className="btn-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? 'Soumission en cours...' : 'Envoyer mon dossier'}
+                          {!loading && <ArrowRight className="w-4 h-4" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </FadeIn>
               </div>
 
-              {/* Admission Form */}
-              <FadeIn direction="left" className="relative">
-                <div className="bg-white p-10 md:p-14 rounded-[4rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] border border-slate-100 relative z-10">
-                   <h3 className="text-3xl font-extrabold text-slate-900 mb-10 flex items-center gap-3">
-                     Formulaire Admission
-                     <span className="w-2 h-2 rounded-full bg-[#D32D3F] animate-ping"></span>
-                   </h3>
-                   <form onSubmit={handleSubmit} className="space-y-8">
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div className="space-y-3">
-                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Prénom de l'élève</label>
-                         <input 
-                           type="text" name="firstName" value={formData.firstName} onChange={handleChange} required
-                           placeholder="Ex: Jean"
-                           className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 focus:border-[#D32D3F] focus:bg-white outline-none transition-all font-bold text-slate-900" 
-                         />
-                       </div>
-                       <div className="space-y-3">
-                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nom de l'élève</label>
-                         <input 
-                           type="text" name="lastName" value={formData.lastName} onChange={handleChange} required
-                           placeholder="Ex: Durand"
-                           className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 focus:border-[#D32D3F] focus:bg-white outline-none transition-all font-bold text-slate-900" 
-                         />
-                       </div>
-                     </div>
-
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div className="space-y-3">
-                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email du tuteur</label>
-                         <input 
-                           type="email" name="email" value={formData.email} onChange={handleChange} required
-                           placeholder="email@exemple.com"
-                           className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 focus:border-[#D32D3F] focus:bg-white outline-none transition-all font-bold text-slate-900" 
-                         />
-                       </div>
-                       <div className="space-y-3">
-                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Téléphone</label>
-                         <input 
-                           type="tel" name="phone" value={formData.phone} onChange={handleChange} required
-                           placeholder="+509 0000-0000"
-                           className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 focus:border-[#D32D3F] focus:bg-white outline-none transition-all font-bold text-slate-900" 
-                         />
-                       </div>
-                     </div>
-
-                     <div className="space-y-3">
-                       <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Niveau Souhaité</label>
-                       <div className="relative">
-                         <select 
-                           name="level" value={formData.level} onChange={handleChange} required
-                           className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-8 py-5 focus:border-[#D32D3F] focus:bg-white outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer"
-                         >
-                           <option value="">Choisissez un niveau</option>
-                           <optgroup label="Le Jardin Vert de Cassandre">
-                             <option value="1ère Maternelle">1ère Année Maternelle</option>
-                             <option value="2ème Maternelle">2ème Année Maternelle</option>
-                             <option value="3ème Maternelle">3ème Année Maternelle</option>
-                           </optgroup>
-                           <optgroup label="Cycle Fondamental">
-                             <option value="1ère AF">1ère AF</option>
-                             <option value="2ème AF">2ème AF</option>
-                             <option value="3ème AF">3ème AF</option>
-                             <option value="4ème AF">4ème AF</option>
-                             <option value="5ème AF">5ème AF</option>
-                             <option value="6ème AF">6ème AF</option>
-                             <option value="7ème AF">7ème AF</option>
-                             <option value="8ème AF">8ème AF</option>
-                             <option value="9ème AF">9ème AF</option>
-                           </optgroup>
-                           <optgroup label="Nouveau Secondaire">
-                             <option value="NS1">NS1</option>
-                             <option value="NS2">NS2</option>
-                             <option value="NS3">NS3</option>
-                             <option value="NS4 (Terminale)">NS4 (Terminale)</option>
-                           </optgroup>
-                         </select>
-                         <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                           <ArrowRight className="w-5 h-5 rotate-90" />
-                         </div>
-                       </div>
-                     </div>
-
-                     {/* Custom Document Upload UI */}
-                     <div className="space-y-6 pt-6 border-t border-slate-100">
-                        <div className="flex justify-between items-end mb-2">
-                           <p className="text-xs font-extrabold text-[#D32D3F] uppercase tracking-widest">Pièces jointes obligatoires</p>
-                           <p className="text-[10px] font-bold text-slate-400 italic">Formats : JPG, PNG, PDF (max 5MB)</p>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           {[
-                             { name: 'birthCertificate', label: 'Acte Naissance', required: true },
-                             { name: 'reportCard', label: 'Dernier Bulletin', required: true },
-                             { name: 'identityPhotos', label: 'Photos Identité', required: true },
-                             { name: 'medicalCertificate', label: 'Certificat Médical', required: false }
-                           ].map((doc) => {
-                             const file = (formData as any)[doc.name];
-                             return (
-                               <div key={doc.name} className="relative">
-                                 <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all group ${file ? 'bg-green-50 border-green-200 shadow-inner' : 'bg-slate-50 border-slate-200 hover:bg-[#FFF8E7] hover:border-[#D32D3F]/50'}`}>
-                                   <div className="flex flex-col items-center justify-center p-4 text-center">
-                                     {file ? (
-                                       <CheckCircle2 className="w-6 h-6 text-green-500 mb-2" />
-                                     ) : (
-                                       <Upload className="w-5 h-5 text-slate-400 group-hover:text-[#D32D3F] mb-2 transition-colors" />
-                                     )}
-                                     <p className={`text-[10px] font-extrabold uppercase tracking-tight leading-tight ${file ? 'text-green-700' : 'text-slate-500 group-hover:text-slate-900'}`}>
-                                       {file ? file.name : `${doc.label} ${doc.required ? '*' : ''}`}
-                                     </p>
-                                     {file && <p className="text-[8px] font-bold text-green-600/60 mt-1">Prêt à l'envoi</p>}
-                                   </div>
-                                   <input 
-                                     type="file" 
-                                     name={doc.name} 
-                                     className="hidden" 
-                                     accept=".pdf,.jpg,.jpeg,.png"
-                                     onChange={handleChange} 
-                                     required={doc.required} 
-                                   />
-                                 </label>
-                               </div>
-                             );
-                           })}
-                        </div>
-                     </div>
-
-                     <button 
-                       type="submit"
-                       disabled={loading}
-                       className="group w-full py-6 bg-[#D32D3F] text-white font-extrabold rounded-[2rem] hover:bg-[#8B1A26] transition-all shadow-2xl shadow-[#D32D3F]/40 mt-8 flex items-center justify-center gap-3 transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                     >
-                       {loading ? 'Soumission en cours...' : 'Envoyer mon dossier'}
-                       {!loading && <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />}
-                     </button>
-                   </form>
-                </div>
-                {/* Decoration */}
-                <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-[#FDE68A]/30 rounded-full blur-3xl -z-0"></div>
-              </FadeIn>
-
+              {/* Colonne latérale — dossier requis */}
+              <div className="col-span-12 lg:col-span-4">
+                <FadeIn>
+                  <div className="relative overflow-hidden rounded-lg border border-line group mb-6">
+                    <motion.img
+                      src="/images/school_vision.jpg"
+                      alt="Le campus du Collège Le Flambeau"
+                      className="w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      style={{ height: 'calc(var(--lh) * 9)' }}
+                      initial={{ scale: 1.06 }}
+                      whileInView={{ scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.1, ease: [0.21, 0.47, 0.32, 0.98] }}
+                    />
+                  </div>
+                </FadeIn>
+                <FadeIn>
+                  <div className="border border-line" style={{ padding: 'var(--lh)' }}>
+                    <p className="mono text-xs uppercase tracking-widest text-soft mb-6">
+                      Dossier de candidature
+                    </p>
+                    <ul className="space-y-3">
+                      {[
+                        'Acte de naissance',
+                        'Dernier bulletin scolaire',
+                        "Photos d'identité",
+                        'Certificat médical',
+                      ].map((p) => (
+                        <li
+                          key={p}
+                          className="mono text-xs uppercase tracking-wider text-ink flex gap-2"
+                        >
+                          <span className="text-accent">—</span>
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-6 pt-4 border-t border-line">
+                      <p className="text-soft text-xs">
+                        Vos données sont protégées et traitées avec confidentialité.
+                      </p>
+                    </div>
+                  </div>
+                </FadeIn>
+              </div>
             </div>
           </div>
         </section>

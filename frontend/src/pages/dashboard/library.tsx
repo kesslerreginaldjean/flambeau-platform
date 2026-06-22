@@ -30,49 +30,52 @@ export default function SharedLibrary() {
         <title>Bibliothèque Numérique | CLF</title>
       </Head>
 
-      <div className="p-6">
+      <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Bibliothèque Numérique</h1>
-          <p className="text-slate-500 font-medium">Accédez à vos manuels, ressources et lectures recommandées.</p>
+          <p className="kicker mb-2">Ressources</p>
+          <h1 className="text-3xl font-semibold text-ink tracking-tight">Bibliothèque Numérique</h1>
+          <p className="text-soft mt-2">Accédez à vos manuels, ressources et lectures recommandées.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="space-y-4">
-             <Card className="border-none shadow-xl rounded-[2.5rem] bg-white p-6">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Mes Filtres</h3>
-                {['Toutes les ressources', 'Mes Manuels', 'Documents de classe', 'Littérature'].map((cat, i) => (
-                  <button key={i} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors ${i === 0 ? 'bg-[#FFF8E7] text-[#D32D3F]' : 'text-slate-500 hover:bg-slate-50'}`}>
-                     {cat}
-                  </button>
-                ))}
+          <div>
+             <Card className="border border-line bg-paper p-6">
+                <h3 className="mono text-xs text-soft uppercase tracking-widest mb-4">Mes Filtres</h3>
+                <div className="border-t border-line">
+                  {['Toutes les ressources', 'Mes Manuels', 'Documents de classe', 'Littérature'].map((cat, i) => (
+                    <button key={i} className={`w-full text-left px-3 py-2.5 border-b border-line text-sm transition-colors ${i === 0 ? 'border-l-2 border-l-accent text-accent font-medium' : 'text-soft hover:bg-panel hover:text-ink'}`}>
+                       {cat}
+                    </button>
+                  ))}
+                </div>
              </Card>
           </div>
 
           <div className="lg:col-span-3 space-y-6">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input 
-                placeholder="Rechercher une ressource..." 
-                className="pl-12 py-7 rounded-[2rem] border-none shadow-xl bg-white text-lg"
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-soft z-10" />
+              <Input
+                placeholder="Rechercher une ressource..."
+                className="pl-12"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {resources.map((res) => (
-                <Card key={res.id} className="border-none shadow-md rounded-[2.5rem] bg-white hover:shadow-2xl transition-all group overflow-hidden border-2 border-transparent hover:border-[#D32D3F]/10">
-                   <CardContent className="p-8">
+                <Card key={res.id} className="border border-line bg-paper p-0 hover:border-accent transition-colors">
+                   <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-6">
-                         <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-[#D32D3F]">
-                            <Book className="w-7 h-7" />
+                         <div className="w-12 h-12 border border-line flex items-center justify-center text-accent">
+                            <Book className="w-6 h-6" />
                          </div>
-                         <span className="text-[10px] font-black bg-slate-100 px-3 py-1 rounded-full text-slate-500">{res.type}</span>
+                         <span className="mono text-[10px] border border-line px-2 py-1 text-soft uppercase tracking-widest">{res.type}</span>
                       </div>
-                      <h4 className="text-lg font-black text-slate-900 mb-2 leading-tight">{res.title}</h4>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-6">{res.category}</p>
-                      
-                      <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                         <span className="text-xs font-bold text-slate-400">{res.size}</span>
-                         <button className="flex items-center gap-2 px-4 py-2 bg-[#D32D3F] rounded-xl text-white font-bold text-xs shadow-lg shadow-[#D32D3F]/20 hover:scale-105 transition-transform">
+                      <h4 className="text-lg font-semibold text-ink mb-2 leading-tight">{res.title}</h4>
+                      <p className="mono text-[10px] text-soft uppercase tracking-widest mb-6">{res.category}</p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-line">
+                         <span className="mono text-xs text-soft">{res.size}</span>
+                         <button className="flex items-center gap-2 px-4 py-2 bg-accent text-paper mono text-[10px] uppercase tracking-widest hover:bg-accent-ink transition-colors">
                             <Download className="w-4 h-4" /> Lire
                          </button>
                       </div>

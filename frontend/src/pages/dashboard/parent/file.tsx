@@ -4,9 +4,8 @@ import { useRouter } from 'next/router';
 import AppLayout from '@/components/layout/AppLayout';
 import { PARENT_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { 
-  GraduationCap, ShieldAlert, BadgeDollarSign, 
+import {
+  GraduationCap, ShieldAlert, BadgeDollarSign,
   ArrowLeft, Download, Mail, History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,17 +35,17 @@ export default function ParentChildFile() {
     fetchChildFile();
   }, [childId]);
 
-  if (loading) return <div className="p-20 text-center font-bold text-slate-400 animate-pulse text-xl uppercase tracking-widest">Récupération du dossier scolaire...</div>;
-  if (!student) return <div className="p-20 text-center text-red-500 font-bold">Erreur : Dossier de l'enfant introuvable.</div>;
+  if (loading) return <div className="p-20 text-center mono text-sm uppercase tracking-widest text-soft animate-pulse">Récupération du dossier scolaire...</div>;
+  if (!student) return <div className="p-20 text-center mono text-sm uppercase tracking-widest text-accent">Erreur : Dossier de l'enfant introuvable.</div>;
 
   return (
     <AppLayout navItems={PARENT_NAV_ITEMS} userName="Parent" userRoleLabel="Suivi Enfant">
       <Head><title>Dossier de {student.user.firstName} | Le Flambeau</title></Head>
-      
-      <div className="p-6 max-w-7xl mx-auto">
-        <button 
+
+      <div className="max-w-7xl mx-auto">
+        <button
           onClick={() => router.push('/dashboard/parent')}
-          className="flex items-center gap-2 text-slate-500 hover:text-[#D32D3F] transition-colors font-bold mb-8 group uppercase text-xs tracking-widest"
+          className="flex items-center gap-2 text-soft hover:text-accent transition-colors mb-8 group mono text-xs uppercase tracking-widest"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Retour au Dashboard
@@ -55,32 +54,32 @@ export default function ParentChildFile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Sidebar Profil de l'enfant */}
           <div className="space-y-6">
-            <Card className="overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-white">
-              <div className="h-32 bg-gradient-to-r from-[#D32D3F] to-[#8B1A26]"></div>
-              <CardContent className="relative pt-0 pb-10 px-8 text-center">
+            <Card className="border border-line bg-paper overflow-hidden">
+              <div className="h-24 bg-ink"></div>
+              <CardContent className="relative pt-0 pb-8 px-6 text-center">
                 <div className="flex justify-center">
-                  <div className="w-32 h-32 rounded-[2rem] bg-white p-2 shadow-2xl -mt-16">
-                    <div className="w-full h-full rounded-[1.5rem] bg-slate-100 flex items-center justify-center text-[#D32D3F] font-black text-4xl">
+                  <div className="w-28 h-28 bg-paper border border-line p-2 -mt-14">
+                    <div className="w-full h-full bg-panel flex items-center justify-center numeral text-accent text-4xl">
                       {student.user.firstName[0]}
                     </div>
                   </div>
                 </div>
-                
-                <h2 className="text-3xl font-black text-slate-900 mt-6 tracking-tight">{student.user.firstName} {student.user.lastName}</h2>
-                <Badge className="mt-2 bg-indigo-50 text-indigo-700 border-none font-black px-6 py-2 rounded-full uppercase tracking-tighter text-xs">
+
+                <h2 className="text-2xl font-semibold text-ink mt-5 tracking-tight">{student.user.firstName} {student.user.lastName}</h2>
+                <p className="mt-2 inline-block border border-line px-4 py-1 mono text-xs uppercase tracking-widest text-ink">
                   {student.enrollments?.[0]?.class?.level} {student.enrollments?.[0]?.class?.name}
-                </Badge>
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-4">Matricule {student.studentNumber}</p>
+                </p>
+                <p className="mono text-xs uppercase tracking-widest text-soft mt-4">Matricule {student.studentNumber}</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-xl rounded-[2.5rem] bg-slate-900 text-white p-8">
-              <h4 className="font-black text-xs uppercase tracking-widest mb-6 opacity-50">Actions de Suivi</h4>
-              <div className="space-y-4">
-                <button className="w-full py-4 bg-white/10 hover:bg-[#D32D3F] transition-colors rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3">
+            <Card className="border border-line bg-ink text-paper p-6">
+              <h4 className="mono text-xs uppercase tracking-widest mb-5 text-paper/60">Actions de Suivi</h4>
+              <div className="space-y-px">
+                <button className="w-full h-12 border border-paper/20 hover:bg-accent hover:border-accent transition-colors mono text-xs uppercase tracking-widest flex items-center justify-center gap-3">
                   <Download className="w-4 h-4" /> Bulletin PDF
                 </button>
-                <button className="w-full py-4 bg-white/10 hover:bg-white hover:text-slate-900 transition-colors rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3">
+                <button className="w-full h-12 border border-paper/20 hover:bg-paper hover:text-ink transition-colors mono text-xs uppercase tracking-widest flex items-center justify-center gap-3">
                   <Mail className="w-4 h-4" /> Contacter l'école
                 </button>
               </div>
@@ -89,7 +88,7 @@ export default function ParentChildFile() {
 
           {/* Onglets et Contenu */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex p-2 bg-slate-100 rounded-[2.5rem] gap-2">
+            <div className="flex border border-line bg-paper">
               {[
                 { id: 'academic', label: 'Notes', icon: GraduationCap },
                 { id: 'discipline', label: 'Conduite', icon: ShieldAlert },
@@ -98,10 +97,10 @@ export default function ParentChildFile() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[1.8rem] font-black text-xs uppercase tracking-widest transition-all ${
-                    activeTab === tab.id 
-                      ? 'bg-white text-[#D32D3F] shadow-xl scale-[1.02]' 
-                      : 'text-slate-400 hover:text-slate-600'
+                  className={`flex-1 flex items-center justify-center gap-2 h-12 mono text-xs uppercase tracking-widest border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-accent text-accent bg-panel'
+                      : 'border-transparent text-soft hover:text-ink'
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -113,42 +112,42 @@ export default function ParentChildFile() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
               >
                 {activeTab === 'academic' && (
-                  <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-                    <CardHeader className="p-10 pb-0">
-                      <CardTitle className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-                        <History className="w-7 h-7 text-[#D32D3F]" />
+                  <Card className="border border-line bg-paper overflow-hidden">
+                    <CardHeader className="p-6 pb-0">
+                      <CardTitle className="text-xl font-semibold text-ink tracking-tight flex items-center gap-3">
+                        <History className="w-5 h-5 text-accent" />
                         Performance Académique
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-10">
+                    <CardContent className="p-6">
                       {student.grades?.length > 0 ? (
-                        <div className="space-y-4">
+                        <div className="space-y-px bg-line border border-line">
                           {student.grades.map((grade: any) => (
-                            <div key={grade.id} className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] hover:bg-slate-100 transition-all group">
-                              <div className="flex items-center gap-6">
-                                <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-xl font-black text-[#D32D3F] group-hover:scale-110 transition-transform">
+                            <div key={grade.id} className="flex items-center justify-between p-5 bg-paper hover:bg-panel transition-colors">
+                              <div className="flex items-center gap-5">
+                                <div className="w-12 h-12 border border-line flex items-center justify-center numeral text-xl text-accent">
                                   {grade.score}
                                 </div>
                                 <div>
-                                  <p className="font-black text-slate-900 text-lg">{grade.subject}</p>
-                                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                  <p className="font-semibold text-ink">{grade.subject}</p>
+                                  <p className="mono text-xs text-soft uppercase tracking-widest mt-1">
                                     Trimestre {grade.term} • {grade.academicYear?.name}
                                   </p>
                                 </div>
                               </div>
-                              <Badge className="bg-white border-slate-100 text-slate-400 font-bold">{grade.teacherName}</Badge>
+                              <span className="mono text-xs uppercase tracking-widest text-soft border border-line px-3 py-1">{grade.teacherName}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-                          <p className="text-slate-400 font-black italic">Aucune note n'a encore été saisie pour ce trimestre.</p>
+                        <div className="text-center py-20 border border-line">
+                          <p className="text-soft">Aucune note n'a encore été saisie pour ce trimestre.</p>
                         </div>
                       )}
                     </CardContent>
@@ -156,24 +155,24 @@ export default function ParentChildFile() {
                 )}
 
                 {activeTab === 'discipline' && (
-                  <Card className="border-none shadow-2xl rounded-[3rem] bg-white p-10 text-center">
-                    <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <ShieldAlert className="w-10 h-10 text-green-500" />
+                  <Card className="border border-line bg-paper p-10 text-center">
+                    <div className="w-16 h-16 border border-line flex items-center justify-center mx-auto mb-6">
+                      <ShieldAlert className="w-8 h-8 text-ink" />
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Comportement Exemplaire</h3>
-                    <p className="text-slate-400 font-medium max-w-sm mx-auto">Votre enfant n'a reçu aucune sanction ou remarque disciplinaire. Félicitations !</p>
+                    <h3 className="text-xl font-semibold text-ink mb-2 tracking-tight">Comportement Exemplaire</h3>
+                    <p className="text-soft max-w-sm mx-auto">Votre enfant n'a reçu aucune sanction ou remarque disciplinaire. Félicitations.</p>
                   </Card>
                 )}
 
                 {activeTab === 'payments' && (
-                  <Card className="border-none shadow-2xl rounded-[3rem] bg-white p-10">
-                    <h3 className="text-2xl font-black text-slate-900 mb-8 tracking-tight">État de la Scolarité</h3>
-                    <div className="p-8 bg-green-50 rounded-[2.5rem] border border-green-100 flex items-center justify-between">
+                  <Card className="border border-line bg-paper p-6">
+                    <h3 className="text-xl font-semibold text-ink mb-6 tracking-tight border-b border-line pb-4">État de la Scolarité</h3>
+                    <div className="p-6 border border-line flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-black text-green-600 uppercase tracking-widest mb-1">Statut Financier</p>
-                        <p className="text-2xl font-black text-green-800 tracking-tight">Compte à jour ✅</p>
+                        <p className="mono text-xs text-soft uppercase tracking-widest mb-1">Statut Financier</p>
+                        <p className="text-2xl font-semibold text-ink tracking-tight">Compte à jour</p>
                       </div>
-                      <BadgeDollarSign className="w-12 h-12 text-green-200" />
+                      <BadgeDollarSign className="w-10 h-10 text-soft" />
                     </div>
                   </Card>
                 )}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Users,
   GraduationCap,
@@ -11,10 +11,8 @@ import {
   ChevronRight,
   Clock,
   MessageSquare,
-  ArrowUpRight,
   Calendar as CalendarIcon
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 import { authFetch } from "@/lib/authFetch";
@@ -52,10 +50,10 @@ export default function AdminDashboard() {
   }, []);
 
   const statCards = [
-    { title: 'Étudiants Inscrits', value: stats.students, icon: GraduationCap, color: 'bg-blue-50 text-blue-600', trend: '+15%' },
-    { title: 'Professeurs', value: stats.teachers, icon: Briefcase, color: 'bg-amber-50 text-amber-600', trend: '+3%' },
-    { title: 'Staff Administratif', value: '1', icon: Users, color: 'bg-purple-50 text-purple-600', trend: '0%' },
-    { title: 'Revenus (Mois)', value: `${stats.revenue.toLocaleString()} HTG`, icon: TrendingUp, color: 'bg-green-50 text-green-600', trend: '+5%' },
+    { title: 'Étudiants Inscrits', value: stats.students, icon: GraduationCap, trend: '+15%' },
+    { title: 'Professeurs', value: stats.teachers, icon: Briefcase, trend: '+3%' },
+    { title: 'Staff Administratif', value: '1', icon: Users, trend: '0%' },
+    { title: 'Revenus (Mois)', value: `${stats.revenue.toLocaleString()} HTG`, icon: TrendingUp, trend: '+5%' },
   ];
 
   return (
@@ -64,116 +62,101 @@ export default function AdminDashboard() {
         <title>Tableau de Bord Administrateur | CLF</title>
       </Head>
 
-      <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="space-y-10">
         {/* Welcome Section */}
-        <div className="flex justify-between items-end">
+        <div className="flex justify-between items-end border-b border-line pb-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-              Bienvenue, Admin 👋
-            </h1>
-            <p className="text-slate-500 font-medium mt-2">Voici le résumé des activités du collège aujourd'hui.</p>
+            <p className="kicker mb-2">Tableau de bord</p>
+            <h1 className="text-4xl font-semibold text-ink tracking-tight">Bienvenue, Admin</h1>
+            <p className="text-soft mt-2">Voici le résumé des activités du collège aujourd'hui.</p>
           </div>
           <div className="text-right hidden md:block">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            <p className="mono text-xs uppercase tracking-widest text-soft">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statCards.map((stat, i) => (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <Card className="border-none shadow-xl rounded-[2.5rem] bg-white hover:shadow-2xl transition-all group overflow-hidden relative">
-                <CardContent className="p-8">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className={`p-4 rounded-2xl ${stat.color} transition-transform group-hover:scale-110`}>
-                      <stat.icon className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-black text-green-500 flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
-                       {stat.trend} <ArrowUpRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-4xl font-black text-slate-900 mb-1">{stat.value}</p>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{stat.title}</p>
-                  </div>
-                </CardContent>
-                <div className="absolute -bottom-2 -right-2 w-16 h-16 bg-slate-50 rounded-full opacity-50 group-hover:scale-150 transition-transform"></div>
-              </Card>
-            </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-line border border-line">
+          {statCards.map((stat) => (
+            <div key={stat.title} className="bg-paper p-6">
+              <div className="flex justify-between items-start mb-6">
+                <stat.icon className="w-5 h-5 text-accent" />
+                <span className="mono text-xs uppercase tracking-widest text-soft">{stat.trend}</span>
+              </div>
+              <div>
+                <p className="numeral text-4xl text-ink mb-2">{stat.value}</p>
+                <p className="mono text-xs uppercase tracking-widest text-soft">{stat.title}</p>
+              </div>
+            </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Agenda Section */}
-          <Card className="lg:col-span-2 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-              <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                <CalendarIcon className="w-6 h-6 text-[#D32D3F]" /> Agenda Académique
+          <Card className="lg:col-span-2 bg-paper">
+            <div className="p-6 border-b border-line flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-ink flex items-center gap-3">
+                <CalendarIcon className="w-5 h-5 text-accent" /> Agenda Académique
               </h2>
-              <Link href="/dashboard/admin/calendar" className="text-xs font-black text-[#D32D3F] uppercase tracking-widest hover:underline">Voir tout</Link>
+              <Link href="/dashboard/admin/calendar" className="mono text-xs uppercase tracking-widest text-accent hover:text-accent-ink transition-colors">Voir tout</Link>
             </div>
-            <div className="p-8 space-y-6">
+            <div className="divide-y divide-line">
               {upcomingEvents.length > 0 ? upcomingEvents.map((event) => (
-                <div key={event.id} className="flex items-center gap-6 p-6 bg-slate-50 rounded-[2.5rem] group hover:bg-[#FFF8E7] transition-colors">
-                  <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-black transition-transform group-hover:scale-110 ${
-                     event.type === 'exam' ? 'bg-red-100 text-red-600' : 'bg-white text-slate-900 shadow-sm'
+                <div key={event.id} className="flex items-center gap-6 p-6 group hover:bg-panel transition-colors">
+                  <div className={`w-16 h-16 border flex flex-col items-center justify-center ${
+                     event.type === 'exam' ? 'border-accent text-accent' : 'border-line text-ink'
                   }`}>
-                    <span className="text-[10px] uppercase">{new Date(event.startDate).toLocaleString('fr-FR', { month: 'short' })}</span>
-                    <span className="text-xl">{new Date(event.startDate).getDate()}</span>
+                    <span className="mono text-[10px] uppercase">{new Date(event.startDate).toLocaleString('fr-FR', { month: 'short' })}</span>
+                    <span className="numeral text-xl">{new Date(event.startDate).getDate()}</span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-extrabold text-slate-900 text-lg mb-1">{event.title}</h4>
+                    <h4 className="font-semibold text-ink text-lg mb-1">{event.title}</h4>
                     <div className="flex items-center gap-4">
-                      <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                      <span className="mono text-[10px] uppercase tracking-widest text-soft flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                        event.type === 'exam' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'
+                      <span className={`mono text-[10px] uppercase tracking-widest ${
+                        event.type === 'exam' ? 'text-accent' : 'text-ink'
                       }`}>
                         {event.type}
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#D32D3F] transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-soft group-hover:text-accent transition-colors" />
                 </div>
               )) : (
                 <div className="text-center py-10">
-                   <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Aucun événement à venir</p>
+                   <p className="mono text-xs uppercase tracking-widest text-soft">Aucun événement à venir</p>
                 </div>
               )}
             </div>
           </Card>
 
           {/* Messages Section */}
-          <Card className="border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden">
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-              <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-                <MessageSquare className="w-6 h-6 text-[#D32D3F]" /> Messages
+          <Card className="bg-paper flex flex-col">
+            <div className="p-6 border-b border-line flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-ink flex items-center gap-3">
+                <MessageSquare className="w-5 h-5 text-accent" /> Messages
               </h2>
-              <Link href="/dashboard/admin/messages" className="text-xs font-black text-[#D32D3F] uppercase tracking-widest hover:underline">Voir tout</Link>
+              <Link href="/dashboard/admin/messages" className="mono text-xs uppercase tracking-widest text-accent hover:text-accent-ink transition-colors">Voir tout</Link>
             </div>
-            <div className="p-8 space-y-6">
+            <div className="p-6 space-y-6 flex-1">
               {recentMessages.length > 0 ? recentMessages.map((msg) => (
                 <div key={msg.id} className="flex gap-4 group cursor-pointer">
                   <div className="relative">
-                    <img 
-                      src={`https://api.dicebear.com/7.x/notionists/svg?seed=${msg.sender?.lastName || 'user'}`} 
-                      className="w-12 h-12 rounded-2xl bg-slate-100 border-2 border-white shadow-sm" 
-                      alt="avatar" 
+                    <img
+                      src={`https://api.dicebear.com/7.x/notionists/svg?seed=${msg.sender?.lastName || 'user'}`}
+                      className="w-12 h-12 border border-line bg-panel"
+                      alt="avatar"
                     />
-                    {!msg.isRead && <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#D32D3F] rounded-full border-2 border-white"></span>}
+                    {!msg.isRead && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-accent border border-paper"></span>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
-                      <p className="font-bold text-slate-900 truncate">{msg.sender?.firstName} {msg.sender?.lastName}</p>
-                      <span className="text-[10px] text-slate-400 font-bold">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <p className="font-semibold text-ink truncate">{msg.sender?.firstName} {msg.sender?.lastName}</p>
+                      <span className="mono text-[10px] text-soft">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <p className="text-xs text-slate-500 truncate font-medium group-hover:text-slate-900 transition-colors">
+                    <p className="text-xs text-soft truncate group-hover:text-ink transition-colors">
                       {msg.content}
                     </p>
                   </div>
@@ -182,22 +165,22 @@ export default function AdminDashboard() {
                 <div className="space-y-6">
                   {/* Static Placeholder if no real data yet */}
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="flex gap-4 opacity-50 grayscale">
-                      <div className="w-12 h-12 bg-slate-100 rounded-2xl animate-pulse"></div>
+                    <div key={i} className="flex gap-4 opacity-50">
+                      <div className="w-12 h-12 bg-panel animate-pulse"></div>
                       <div className="flex-1 space-y-2">
-                        <div className="h-3 bg-slate-100 rounded w-1/2 animate-pulse"></div>
-                        <div className="h-2 bg-slate-100 rounded w-full animate-pulse"></div>
+                        <div className="h-3 bg-panel w-1/2 animate-pulse"></div>
+                        <div className="h-2 bg-panel w-full animate-pulse"></div>
                       </div>
                     </div>
                   ))}
-                  <p className="text-center text-xs font-bold text-slate-300 uppercase tracking-widest">En attente de messages...</p>
+                  <p className="text-center mono text-xs uppercase tracking-widest text-soft">En attente de messages...</p>
                 </div>
               )}
             </div>
-            <div className="p-8 bg-slate-50/50 mt-auto">
-               <Link 
+            <div className="p-6 border-t border-line">
+               <Link
                  href="/dashboard/admin/messages"
-                 className="w-full py-4 bg-white border-2 border-slate-100 text-slate-900 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 hover:bg-[#D32D3F] hover:text-white hover:border-[#D32D3F] transition-all"
+                 className="w-full py-3 border border-line text-ink mono text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-accent hover:text-paper hover:border-accent transition-colors"
                >
                  Ouvrir la messagerie <ChevronRight className="w-4 h-4" />
                </Link>

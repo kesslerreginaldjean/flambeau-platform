@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
 import { Card } from "@/components/ui/card";
@@ -90,40 +91,40 @@ export default function AdminMessages() {
         <title>Messagerie Interne | CLF</title>
       </Head>
 
-      <div className="h-[calc(100vh-120px)] flex gap-6 p-6">
+      <div className="h-[calc(100vh-120px)] flex gap-6">
         {/* Contact List */}
         <div className="w-80 flex flex-col gap-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input placeholder="Rechercher un contact..." className="pl-10 rounded-2xl bg-white border-none shadow-sm h-12" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-soft z-10" />
+            <Input placeholder="Rechercher un contact..." className="pl-10" />
           </div>
 
-          <Card className="flex-1 border-none shadow-xl rounded-[2.5rem] bg-white overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-slate-50">
-              <h2 className="text-xl font-bold text-slate-900">Conversations</h2>
+          <Card className="flex-1 border border-line bg-paper overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-line">
+              <h2 className="text-xl font-semibold text-ink">Conversations</h2>
             </div>
             <div className="overflow-y-auto flex-1">
               {contacts.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-sm italic">
+                <div className="p-8 text-center text-soft text-sm">
                   Aucun utilisateur créé pour le moment.
                 </div>
               ) : contacts.map((contact) => (
                 <div
                   key={contact.id}
                   onClick={() => setSelectedUser(contact)}
-                  className={`p-4 flex items-center gap-4 cursor-pointer transition-colors hover:bg-slate-50 border-l-4 ${selectedUser?.id === contact.id ? 'border-[#D32D3F] bg-[#FFF8E7]/30' : 'border-transparent'
+                  className={`p-4 flex items-center gap-4 cursor-pointer transition-colors hover:bg-panel border-b border-line border-l-2 ${selectedUser?.id === contact.id ? 'border-l-accent bg-panel' : 'border-l-transparent'
                     }`}
                 >
                   <div className="relative">
-                    <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
+                    <Avatar className="h-12 w-12 border border-line">
                       <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${contact.lastName}`} />
                       <AvatarFallback>{contact.firstName[0]}</AvatarFallback>
                     </Avatar>
-                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-slate-300 rounded-full border-2 border-white"></span>
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-soft border-2 border-paper"></span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{contact.firstName} {contact.lastName}</p>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">{contact.role}</p>
+                    <p className="font-medium text-ink truncate">{contact.firstName} {contact.lastName}</p>
+                    <p className="mono text-xs text-soft uppercase tracking-widest">{contact.role}</p>
                   </div>
                 </div>
               ))}
@@ -132,44 +133,44 @@ export default function AdminMessages() {
         </div>
 
         {/* Chat Area */}
-        <Card className="flex-1 border-none shadow-2xl rounded-[3rem] bg-white overflow-hidden flex flex-col">
+        <Card className="flex-1 border border-line bg-paper overflow-hidden flex flex-col">
           {selectedUser ? (
             <>
               {/* Chat Header */}
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white">
+              <div className="p-6 border-b border-line flex items-center justify-between bg-paper">
                 <div className="flex items-center gap-4">
-                  <Avatar className="h-12 w-12 border-2 border-[#D32D3F]/10">
+                  <Avatar className="h-12 w-12 border border-line">
                     <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${selectedUser.lastName}`} />
                     <AvatarFallback>{selectedUser.firstName[0]}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-bold text-slate-900">{selectedUser.firstName} {selectedUser.lastName}</h3>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{selectedUser.role}</p>
+                    <h3 className="font-semibold text-ink">{selectedUser.firstName} {selectedUser.lastName}</h3>
+                    <p className="mono text-xs text-soft uppercase tracking-widest">{selectedUser.role}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 text-slate-400"><Phone className="w-5 h-5" /></Button>
-                  <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 text-slate-400"><Video className="w-5 h-5" /></Button>
-                  <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 text-slate-400"><MoreVertical className="w-5 h-5" /></Button>
+                  <Button variant="ghost" size="icon" className="hover:bg-panel text-soft"><Phone className="w-5 h-5" /></Button>
+                  <Button variant="ghost" size="icon" className="hover:bg-panel text-soft"><Video className="w-5 h-5" /></Button>
+                  <Button variant="ghost" size="icon" className="hover:bg-panel text-soft"><MoreVertical className="w-5 h-5" /></Button>
                 </div>
               </div>
 
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-8 bg-[#F8F9FA] space-y-6">
+              <div className="flex-1 overflow-y-auto p-8 bg-panel space-y-6">
                  {messages.length === 0 ? (
-                   <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-2">
-                     <MessageSquare className="w-12 h-12 opacity-20" />
-                     <p className="text-sm font-bold uppercase tracking-widest opacity-50">Aucun message</p>
-                     <p className="text-[10px] text-slate-400">Envoyez le premier message à {selectedUser.firstName}.</p>
+                   <div className="h-full flex flex-col items-center justify-center text-soft space-y-2">
+                     <MessageSquare className="w-12 h-12 opacity-30" />
+                     <p className="mono text-sm uppercase tracking-widest">Aucun message</p>
+                     <p className="mono text-[10px] text-soft">Envoyez le premier message à {selectedUser.firstName}.</p>
                    </div>
                  ) : [...messages].reverse().map((msg) => (
                    <div key={msg.id} className={`flex ${msg.senderId === currentUser?.id ? 'justify-end' : 'justify-start'}`}>
-                     <div className={`max-w-[70%] p-5 rounded-[2rem] ${msg.senderId === currentUser?.id
-                         ? 'bg-[#D32D3F] text-white rounded-tr-none shadow-xl shadow-[#D32D3F]/20 font-bold'
-                         : 'bg-white text-slate-700 rounded-tl-none shadow-sm border border-slate-100 font-medium'
+                     <div className={`max-w-[70%] p-5 border ${msg.senderId === currentUser?.id
+                         ? 'bg-ink text-paper border-ink'
+                         : 'bg-paper text-ink border-line'
                        }`}>
                        <p className="text-sm leading-relaxed">{msg.content}</p>
-                       <span className={`text-[10px] mt-2 block ${msg.senderId === currentUser?.id ? 'text-right opacity-70' : 'text-slate-400'}`}>
+                       <span className={`mono text-[10px] mt-2 block ${msg.senderId === currentUser?.id ? 'text-right text-paper/60' : 'text-soft'}`}>
                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                        </span>
                      </div>
@@ -178,17 +179,17 @@ export default function AdminMessages() {
               </div>
 
               {/* Input Area */}
-              <div className="p-6 bg-white border-t border-slate-100">
-                <form onSubmit={handleSend} className="flex items-center gap-4 bg-slate-50 p-2 rounded-[2rem] border border-slate-100">
-                  <Button type="button" variant="ghost" size="icon" className="rounded-full text-slate-400"><Smile className="w-5 h-5" /></Button>
-                  <Button type="button" variant="ghost" size="icon" className="rounded-full text-slate-400"><Paperclip className="w-5 h-5" /></Button>
+              <div className="p-6 bg-paper border-t border-line">
+                <form onSubmit={handleSend} className="flex items-center gap-2 bg-panel p-2 border border-line">
+                  <Button type="button" variant="ghost" size="icon" className="text-soft"><Smile className="w-5 h-5" /></Button>
+                  <Button type="button" variant="ghost" size="icon" className="text-soft"><Paperclip className="w-5 h-5" /></Button>
                   <Input
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     placeholder={`Écrire à ${selectedUser.firstName}...`}
-                    className="flex-1 bg-transparent border-none focus-visible:ring-0 shadow-none font-bold text-slate-700"
+                    className="flex-1 bg-transparent border-none focus-visible:ring-0 text-ink"
                   />
-                  <Button type="submit" className="bg-[#D32D3F] hover:bg-[#8B1A26] text-white w-12 h-12 rounded-full shadow-lg p-0 transition-transform hover:scale-110 active:scale-90">
+                  <Button type="submit" className="btn-accent w-12 h-12 p-0 shrink-0">
                     <Send className="w-5 h-5" />
                   </Button>
                 </form>
@@ -196,12 +197,12 @@ export default function AdminMessages() {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-12 space-y-4">
-              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+              <div className="w-24 h-24 bg-panel border border-line flex items-center justify-center text-soft">
                 <MessageSquare className="w-12 h-12" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900">Messagerie Réelle CLF</h3>
-              <p className="text-slate-500 max-w-sm font-medium">Sélectionnez un utilisateur réel de votre base de données pour commencer à discuter.</p>
-              <Link href="/dashboard/admin/users" className="text-[#D32D3F] text-xs font-black uppercase tracking-widest border-b-2 border-[#D32D3F] pb-1">
+              <h3 className="text-2xl font-semibold text-ink">Messagerie Réelle CLF</h3>
+              <p className="text-soft max-w-sm">Sélectionnez un utilisateur réel de votre base de données pour commencer à discuter.</p>
+              <Link href="/dashboard/admin/users" className="text-accent mono text-xs uppercase tracking-widest border-b-2 border-accent pb-1 hover:text-accent-ink">
                 Créer des utilisateurs
               </Link>
             </div>
@@ -211,5 +212,3 @@ export default function AdminMessages() {
     </AppLayout>
   );
 }
-
-import Link from 'next/link';

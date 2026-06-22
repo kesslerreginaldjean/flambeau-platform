@@ -4,15 +4,14 @@ import AppLayout from '@/components/layout/AppLayout';
 import { ADMIN_NAV_ITEMS } from '@/constants/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, GraduationCap, User, 
-  ArrowLeft, FileText, ShieldAlert, BadgeDollarSign, 
+import {
+  Search, GraduationCap, User,
+  ArrowLeft, FileText, ShieldAlert, BadgeDollarSign,
   Clock, Download, Mail, Phone, CheckCircle2,
   History as HistoryIcon
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { authFetch } from "@/lib/authFetch";
 export default function AdminStudents() {
@@ -45,12 +44,12 @@ export default function AdminStudents() {
       setDetailLoading(true);
       const response = await authFetch(`/api/admin/students/${id}`);
       const data = await response.json();
-      
+
       if (data.error) {
         alert("Erreur lors de la récupération du dossier : " + data.error);
         return;
       }
-      
+
       setSelectedStudent(data);
     } catch (error) {
       console.error('Failed to fetch student details:', error);
@@ -60,7 +59,7 @@ export default function AdminStudents() {
     }
   };
 
-  const filteredStudents = students.filter(s => 
+  const filteredStudents = students.filter(s =>
     `${s.firstName} ${s.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.student?.studentNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -69,65 +68,59 @@ export default function AdminStudents() {
     return (
       <AppLayout navItems={ADMIN_NAV_ITEMS} userName="Admin Flambeau" userRoleLabel="Administrateur">
         <Head><title>{selectedStudent.firstName} {selectedStudent.lastName} | Dossier Éclat</title></Head>
-        
-        <div className="p-6 max-w-7xl mx-auto">
+
+        <div className="max-w-7xl mx-auto">
           {/* Header avec Retour */}
-          <button 
+          <button
             onClick={() => setSelectedStudent(null)}
-            className="flex items-center gap-2 text-slate-500 hover:text-[#D32D3F] transition-colors font-bold mb-6 group"
+            className="flex items-center gap-2 text-soft hover:text-accent transition-colors mono text-xs uppercase tracking-widest mb-6"
           >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="w-4 h-4" />
             Retour au registre
           </button>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Colonne Gauche: Profil Rapide */}
             <div className="space-y-6">
-              <Card className="overflow-hidden border-none shadow-2xl rounded-[2.5rem] bg-white">
-                <div className="h-32 bg-gradient-to-r from-[#D32D3F] to-[#8B1A26]"></div>
-                <CardContent className="relative pt-0 pb-8 px-8">
+              <Card className="bg-paper">
+                <CardContent className="p-8">
                   <div className="flex justify-center">
-                    <div className="relative -mt-16">
-                      <div className="w-32 h-32 rounded-[2.5rem] bg-white p-2 shadow-xl">
-                        <div className="w-full h-full rounded-[2rem] bg-slate-100 flex items-center justify-center text-slate-400">
-                          <User className="w-12 h-12" />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-2 right-2 w-8 h-8 bg-green-500 border-4 border-white rounded-full"></div>
+                    <div className="w-28 h-28 border border-line bg-panel flex items-center justify-center text-soft">
+                      <User className="w-12 h-12" />
                     </div>
                   </div>
-                  
+
                   <div className="text-center mt-6">
-                    <h2 className="text-2xl font-black text-slate-900">{selectedStudent.firstName} {selectedStudent.lastName}</h2>
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Élève • Matricule {selectedStudent.student?.studentNumber}</p>
-                    
+                    <h2 className="text-2xl font-semibold text-ink">{selectedStudent.firstName} {selectedStudent.lastName}</h2>
+                    <p className="mono text-[10px] uppercase tracking-widest text-soft mt-2">Élève • Matricule {selectedStudent.student?.studentNumber}</p>
+
                     <div className="flex items-center justify-center gap-2 mt-4">
-                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none font-black px-4 py-1.5 rounded-full uppercase tracking-tighter">
+                      <Badge className="mono text-xs uppercase tracking-widest">
                         {selectedStudent.student?.enrollments?.[0]?.class?.level || 'N/A'} {selectedStudent.student?.enrollments?.[0]?.class?.name || ''}
                       </Badge>
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none font-black px-4 py-1.5 rounded-full uppercase tracking-tighter">
+                      <Badge className="mono text-xs uppercase tracking-widest">
                         Inscrit
                       </Badge>
                     </div>
                   </div>
 
-                  <div className="mt-8 space-y-4 pt-8 border-t border-slate-50">
-                    <div className="flex items-center gap-4 text-slate-600">
-                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-[#D32D3F]">
+                  <div className="mt-8 space-y-4 pt-8 border-t border-line">
+                    <div className="flex items-center gap-4 text-ink">
+                      <div className="w-10 h-10 border border-line flex items-center justify-center text-accent">
                         <Mail className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</p>
-                        <p className="font-bold text-sm truncate">{selectedStudent.email}</p>
+                        <p className="mono text-[10px] uppercase tracking-widest text-soft">Email</p>
+                        <p className="font-medium text-sm truncate">{selectedStudent.email}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-slate-600">
-                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-[#D32D3F]">
+                    <div className="flex items-center gap-4 text-ink">
+                      <div className="w-10 h-10 border border-line flex items-center justify-center text-accent">
                         <Phone className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Téléphone</p>
-                        <p className="font-bold text-sm">{selectedStudent.phone || 'Non renseigné'}</p>
+                        <p className="mono text-[10px] uppercase tracking-widest text-soft">Téléphone</p>
+                        <p className="font-medium text-sm">{selectedStudent.phone || 'Non renseigné'}</p>
                       </div>
                     </div>
                   </div>
@@ -138,7 +131,7 @@ export default function AdminStudents() {
             {/* Colonne Droite: Dossier Détaillé */}
             <div className="lg:col-span-2 space-y-6">
               {/* Tabs */}
-              <div className="flex p-1.5 bg-slate-100 rounded-[2rem] gap-1">
+              <div className="flex border border-line bg-paper">
                 {[
                   { id: 'academic', label: 'Académique', icon: GraduationCap },
                   { id: 'discipline', label: 'Discipline', icon: ShieldAlert },
@@ -148,10 +141,10 @@ export default function AdminStudents() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-[1.5rem] font-black text-xs uppercase tracking-widest transition-all ${
-                      activeTab === tab.id 
-                        ? 'bg-white text-[#D32D3F] shadow-lg scale-[1.02]' 
-                        : 'text-slate-400 hover:text-slate-600'
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 mono text-xs uppercase tracking-widest border-b-2 transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-accent text-accent'
+                        : 'border-transparent text-soft hover:text-ink'
                     }`}
                   >
                     <tab.icon className="w-4 h-4" />
@@ -161,47 +154,41 @@ export default function AdminStudents() {
               </div>
 
               {/* Tab Content */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
+              <div>
                   {activeTab === 'academic' && (
                     <div className="space-y-6">
-                      <Card className="border-none shadow-xl rounded-[2.5rem]">
+                      <Card className="bg-paper">
                         <CardHeader className="p-8 pb-0">
-                          <CardTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
-                            <HistoryIcon className="w-6 h-6 text-[#D32D3F]" />
+                          <CardTitle className="text-xl font-semibold text-ink flex items-center gap-3">
+                            <HistoryIcon className="w-5 h-5 text-accent" />
                             Historique des Notes
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="p-8">
                           {selectedStudent.student?.grades?.length > 0 ? (
-                            <div className="space-y-4">
+                            <div className="divide-y divide-line border border-line">
                               {selectedStudent.student.grades.map((grade: any) => (
-                                <div key={grade.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
+                                <div key={grade.id} className="flex items-center justify-between p-4 hover:bg-panel transition-colors">
                                   <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-lg font-black text-[#D32D3F] shadow-sm">
+                                    <div className="w-12 h-12 border border-line flex items-center justify-center numeral text-lg text-accent">
                                       {grade.score}
                                     </div>
                                     <div>
-                                      <p className="font-bold text-slate-900">{grade.subject}</p>
-                                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                      <p className="font-medium text-ink">{grade.subject}</p>
+                                      <p className="mono text-[10px] uppercase tracking-widest text-soft">
                                         Trimestre {grade.term} • {grade.academicYear?.name}
                                       </p>
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Professeur</p>
-                                    <p className="text-xs font-bold text-slate-700">{grade.teacherName}</p>
+                                    <p className="mono text-[10px] uppercase tracking-widest text-soft">Professeur</p>
+                                    <p className="text-xs font-medium text-ink">{grade.teacherName}</p>
                                   </div>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 font-bold">
+                            <div className="text-center py-12 text-soft border border-dashed border-line mono text-xs uppercase tracking-widest">
                               Aucune note enregistrée pour le moment.
                             </div>
                           )}
@@ -211,45 +198,45 @@ export default function AdminStudents() {
                   )}
 
                   {activeTab === 'discipline' && (
-                    <Card className="border-none shadow-xl rounded-[2.5rem]">
+                    <Card className="bg-paper">
                       <CardHeader className="p-8 pb-0">
-                        <CardTitle className="text-xl font-black text-slate-900">Rapports de Discipline</CardTitle>
+                        <CardTitle className="text-xl font-semibold text-ink">Rapports de Discipline</CardTitle>
                       </CardHeader>
                       <CardContent className="p-8">
-                        <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 font-bold">
-                          Dossier de comportement vierge. 
+                        <div className="text-center py-12 text-soft border border-dashed border-line mono text-xs uppercase tracking-widest">
+                          Dossier de comportement vierge.
                         </div>
                       </CardContent>
                     </Card>
                   )}
 
                   {activeTab === 'payments' && (
-                    <Card className="border-none shadow-xl rounded-[2.5rem]">
+                    <Card className="bg-paper">
                       <CardHeader className="p-8 pb-0">
-                        <CardTitle className="text-xl font-black text-slate-900 flex items-center gap-3">
-                          <BadgeDollarSign className="w-6 h-6 text-[#D32D3F]" />
+                        <CardTitle className="text-xl font-semibold text-ink flex items-center gap-3">
+                          <BadgeDollarSign className="w-5 h-5 text-accent" />
                           Historique des Paiements
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-8">
                         {selectedStudent.student?.payments?.length > 0 ? (
-                          <div className="space-y-4">
+                          <div className="divide-y divide-line border border-line">
                             {selectedStudent.student.payments.map((payment: any) => (
-                              <div key={payment.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-[1.5rem] hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200">
+                              <div key={payment.id} className="flex items-center justify-between p-5 hover:bg-panel transition-colors">
                                 <div className="flex items-center gap-4">
-                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black ${payment.status === 'completed' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                                  <div className={`w-12 h-12 border flex items-center justify-center ${payment.status === 'completed' ? 'border-accent text-accent' : 'border-line text-soft'}`}>
                                     {payment.status === 'completed' ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
                                   </div>
                                   <div>
-                                    <p className="font-bold text-slate-900">{payment.paymentType}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                    <p className="font-medium text-ink">{payment.paymentType}</p>
+                                    <p className="mono text-[10px] uppercase tracking-widest text-soft">
                                       Échéance: {new Date(payment.dueDate).toLocaleDateString()} • {payment.academicYear?.name}
                                     </p>
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <p className="text-lg font-black text-slate-900">{payment.amount.toLocaleString()} HTG</p>
-                                  <Badge className={`${payment.status === 'completed' ? 'bg-green-500' : 'bg-amber-500'} text-white border-none text-[8px] font-black uppercase px-2 py-0.5`}>
+                                  <p className="numeral text-lg text-ink">{payment.amount.toLocaleString()} HTG</p>
+                                  <Badge className={`mono text-[8px] uppercase tracking-widest ${payment.status === 'completed' ? 'text-accent' : 'text-ink'}`}>
                                     {payment.status === 'completed' ? 'Payé' : 'En attente'}
                                   </Badge>
                                 </div>
@@ -257,7 +244,7 @@ export default function AdminStudents() {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 font-bold">
+                          <div className="text-center py-12 text-soft border border-dashed border-line mono text-xs uppercase tracking-widest">
                             Aucun paiement enregistré.
                           </div>
                         )}
@@ -266,30 +253,29 @@ export default function AdminStudents() {
                   )}
 
                   {activeTab === 'documents' && (
-                    <Card className="border-none shadow-xl rounded-[2.5rem]">
+                    <Card className="bg-paper">
                       <CardHeader className="p-8 pb-0">
-                        <CardTitle className="text-xl font-black text-slate-900">Pièces Jointes & Documents</CardTitle>
+                        <CardTitle className="text-xl font-semibold text-ink">Pièces Jointes & Documents</CardTitle>
                       </CardHeader>
                       <CardContent className="p-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-6 bg-slate-50 rounded-3xl flex items-center justify-between group hover:bg-[#D32D3F]/5 transition-colors cursor-pointer border border-transparent hover:border-[#D32D3F]/20">
+                          <div className="p-6 border border-line flex items-center justify-between group hover:bg-panel transition-colors cursor-pointer">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#D32D3F] shadow-sm">
+                              <div className="w-12 h-12 border border-line flex items-center justify-center text-accent">
                                 <FileText className="w-6 h-6" />
                               </div>
                               <div>
-                                <p className="font-bold text-slate-900">Acte de Naissance</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Format PDF • 1.2 MB</p>
+                                <p className="font-medium text-ink">Acte de Naissance</p>
+                                <p className="mono text-[10px] uppercase tracking-widest text-soft">Format PDF • 1.2 MB</p>
                               </div>
                             </div>
-                            <Download className="w-5 h-5 text-slate-300 group-hover:text-[#D32D3F] transition-colors" />
+                            <Download className="w-5 h-5 text-soft group-hover:text-accent transition-colors" />
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   )}
-                </motion.div>
-              </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
@@ -303,80 +289,81 @@ export default function AdminStudents() {
         <title>Gestion des Étudiants | CLF</title>
       </Head>
 
-      <div className="p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-line pb-6">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Registre des Étudiants</h1>
-            <p className="text-slate-500 font-medium text-sm">Liste complète des élèves inscrits au collège.</p>
+            <p className="kicker mb-2">Administration</p>
+            <h1 className="text-3xl font-semibold text-ink tracking-tight">Registre des Étudiants</h1>
+            <p className="text-soft text-sm mt-1">Liste complète des élèves inscrits au collège.</p>
           </div>
-          
+
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input 
-              placeholder="Rechercher par nom ou matricule..." 
-              className="pl-10 h-12 rounded-2xl border-slate-200 focus:ring-2 focus:ring-[#D32D3F]/20 focus:border-[#D32D3F] transition-all"
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-soft z-10" />
+            <Input
+              placeholder="Rechercher par nom ou matricule..."
+              className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-50">
+        <div className="border border-line bg-paper">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Élève</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Matricule</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Classe</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Statut</th>
-                  <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                <tr className="border-b border-line">
+                  <th className="px-8 py-5 mono text-xs uppercase tracking-widest text-soft">Élève</th>
+                  <th className="px-8 py-5 mono text-xs uppercase tracking-widest text-soft">Matricule</th>
+                  <th className="px-8 py-5 mono text-xs uppercase tracking-widest text-soft">Classe</th>
+                  <th className="px-8 py-5 mono text-xs uppercase tracking-widest text-soft">Statut</th>
+                  <th className="px-8 py-5 mono text-xs uppercase tracking-widest text-soft text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-line">
                 {loading ? (
-                  <tr><td colSpan={5} className="p-20 text-center font-bold text-slate-400 animate-pulse">Chargement de la base de données...</td></tr>
+                  <tr><td colSpan={5} className="p-20 text-center mono text-xs uppercase tracking-widest text-soft animate-pulse">Chargement de la base de données...</td></tr>
                 ) : filteredStudents.map((student) => (
-                  <tr 
-                    key={student.id} 
-                    className="hover:bg-slate-50/80 transition-all group cursor-pointer"
+                  <tr
+                    key={student.id}
+                    className="hover:bg-panel transition-colors group cursor-pointer"
                     onClick={() => handleViewDetail(student.id)}
                   >
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-[1.25rem] bg-slate-100 flex items-center justify-center text-[#D32D3F] font-black text-sm shadow-inner group-hover:bg-[#D32D3F] group-hover:text-white transition-all duration-300">
+                        <div className="w-12 h-12 border border-line flex items-center justify-center text-accent mono text-sm group-hover:bg-accent group-hover:text-paper group-hover:border-accent transition-colors">
                           {student.firstName[0]}{student.lastName[0]}
                         </div>
                         <div>
-                          <p className="font-black text-slate-900 group-hover:text-[#D32D3F] transition-colors">{student.firstName} {student.lastName}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{student.gender === 'M' ? 'Garçon' : 'Fille'}</p>
+                          <p className="font-medium text-ink group-hover:text-accent transition-colors">{student.firstName} {student.lastName}</p>
+                          <p className="mono text-[10px] uppercase tracking-widest text-soft">{student.gender === 'M' ? 'Garçon' : 'Fille'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                      <code className="text-xs font-black bg-slate-100 px-3 py-1.5 rounded-full text-slate-600 group-hover:bg-slate-200 transition-colors">
+                      <code className="mono text-xs border border-line px-3 py-1.5 text-ink">
                         {student.student?.studentNumber}
                       </code>
                     </td>
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-black text-slate-700">{student.student?.enrollments?.[0]?.class?.level || 'N/A'}</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
-                        <span className="text-sm font-black text-[#D32D3F]">{student.student?.enrollments?.[0]?.class?.name || ''}</span>
+                        <span className="text-sm font-medium text-ink">{student.student?.enrollments?.[0]?.class?.level || 'N/A'}</span>
+                        <div className="w-1.5 h-1.5 bg-line"></div>
+                        <span className="text-sm font-medium text-accent">{student.student?.enrollments?.[0]?.class?.name || ''}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                      <div className="flex items-center gap-2 text-green-600">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[10px] font-black uppercase tracking-widest">Actif</span>
+                      <div className="flex items-center gap-2 text-ink">
+                        <div className="w-2 h-2 bg-accent"></div>
+                        <span className="mono text-[10px] uppercase tracking-widest">Actif</span>
                       </div>
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="rounded-xl font-bold text-slate-500"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-soft"
                           onClick={(e) => {
                             e.stopPropagation();
                             // Edition logic here later
@@ -384,10 +371,10 @@ export default function AdminStudents() {
                         >
                           Éditer
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="rounded-xl font-bold text-[#D32D3F] hover:bg-[#D32D3F]/10 shadow-sm border border-[#D32D3F]/20"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-accent border border-line"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleViewDetail(student.id);
@@ -404,10 +391,10 @@ export default function AdminStudents() {
           </div>
           {!loading && filteredStudents.length === 0 && (
             <div className="p-20 text-center">
-              <div className="w-20 h-20 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-slate-200" />
+              <div className="w-16 h-16 border border-line flex items-center justify-center mx-auto mb-4">
+                <Search className="w-7 h-7 text-soft" />
               </div>
-              <p className="text-slate-400 font-bold">Aucun étudiant trouvé pour "{searchTerm}"</p>
+              <p className="text-soft mono text-xs uppercase tracking-widest">Aucun étudiant trouvé pour "{searchTerm}"</p>
             </div>
           )}
         </div>

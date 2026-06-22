@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import AppLayout from '@/components/layout/AppLayout';
-import { 
-  Plus, Trash2, User, Shield, GraduationCap as StudentIcon, FileText
+import {
+  Plus, Trash2, User, Shield, GraduationCap as StudentIcon, FileText, X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   // Form State
   const [formData, setFormData] = useState({
     email: '',
@@ -99,13 +99,13 @@ export default function UserManagement() {
       const text = event.target?.result as string;
       const lines = text.split('\n');
       const headers = lines[0].split(',').map(h => h.trim());
-      
+
       const parsedUsers = lines.slice(1).filter(l => l.trim() !== '').map(line => {
         const values = line.split(',').map(v => v.trim());
         const user: any = {};
         headers.forEach((header, index) => {
           // Map French headers to English keys
-          const key = 
+          const key =
             header.toLowerCase() === 'prénom' ? 'firstName' :
             header.toLowerCase() === 'nom' ? 'lastName' :
             header.toLowerCase() === 'email' ? 'email' :
@@ -142,30 +142,31 @@ export default function UserManagement() {
         <title>Gestion des Comptes | CLF</title>
       </Head>
 
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-8">
+      <div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-line pb-6">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Gestion des Comptes</h1>
-            <p className="text-slate-500 font-medium">Créez et gérez les accès des étudiants, profs et parents.</p>
+            <p className="kicker mb-2">Administration</p>
+            <h1 className="text-3xl font-semibold text-ink tracking-tight">Gestion des Comptes</h1>
+            <p className="text-soft mt-1">Créez et gérez les accès des étudiants, profs et parents.</p>
           </div>
           <div className="flex gap-3">
             <div className="relative">
-              <input 
-                type="file" 
-                accept=".csv" 
-                onChange={handleImportCSV} 
-                className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleImportCSV}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
               />
-              <Button 
+              <Button
                 variant="outline"
-                className="border-slate-200 text-slate-600 rounded-xl px-6 py-6 h-auto shadow-sm flex gap-2 font-bold"
+                className="border border-line text-ink flex gap-2"
               >
-                <FileText className="w-5 h-5 text-slate-400" /> Importer CSV
+                <FileText className="w-5 h-5 text-soft" /> Importer CSV
               </Button>
             </div>
-            <Button 
+            <Button
               onClick={() => setIsModalOpen(true)}
-              className="bg-[#D32D3F] hover:bg-[#8B1A26] text-white rounded-xl px-6 py-6 h-auto shadow-lg shadow-[#D32D3F]/20 flex gap-2 font-bold"
+              className="bg-accent hover:bg-accent-ink text-paper flex gap-2"
             >
               <Plus className="w-5 h-5" /> Nouveau Compte
             </Button>
@@ -173,61 +174,56 @@ export default function UserManagement() {
         </div>
 
         {/* Users Table */}
-        <Card className="border-none shadow-xl rounded-[2rem] overflow-hidden bg-white">
-          <CardHeader className="bg-slate-50 border-b border-slate-100">
-            <CardTitle className="text-lg font-bold text-slate-800">Liste des utilisateurs</CardTitle>
+        <Card className="bg-paper">
+          <CardHeader className="border-b border-line">
+            <CardTitle className="mono text-xs uppercase tracking-widest text-soft">Liste des utilisateurs</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Utilisateur</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Rôle</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Détails</th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
+                  <tr className="border-b border-line">
+                    <th className="px-6 py-4 mono text-xs uppercase tracking-widest text-soft">Utilisateur</th>
+                    <th className="px-6 py-4 mono text-xs uppercase tracking-widest text-soft">Rôle</th>
+                    <th className="px-6 py-4 mono text-xs uppercase tracking-widest text-soft">Détails</th>
+                    <th className="px-6 py-4 mono text-xs uppercase tracking-widest text-soft">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-line">
                   {loading ? (
-                    <tr><td colSpan={4} className="p-10 text-center text-slate-400">Chargement...</td></tr>
+                    <tr><td colSpan={4} className="p-10 text-center mono text-xs uppercase tracking-widest text-soft animate-pulse">Chargement...</td></tr>
                   ) : (Array.isArray(users) ? users : []).map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <tr key={user.id} className="hover:bg-panel transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#FFF8E7] flex items-center justify-center text-[#D32D3F] font-bold">
+                          <div className="w-10 h-10 border border-line bg-panel flex items-center justify-center text-accent mono text-sm">
                             {user.firstName[0]}{user.lastName[0]}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{user.firstName} {user.lastName}</p>
-                            <p className="text-xs text-slate-500">{user.email}</p>
+                            <p className="font-medium text-ink">{user.firstName} {user.lastName}</p>
+                            <p className="text-xs text-soft">{user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge className={`${
-                          user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                          user.role === 'teacher' ? 'bg-blue-100 text-blue-700' :
-                          user.role === 'student' ? 'bg-amber-100 text-amber-700' :
-                          'bg-slate-100 text-slate-700'
-                        } border-none font-bold capitalize`}>
+                        <Badge className="mono text-xs uppercase tracking-widest text-ink">
                           {user.role}
                         </Badge>
                       </td>
                       <td className="px-6 py-4">
                         {user.student ? (
-                          <div className="text-xs text-slate-500 font-medium">
+                          <div className="text-xs text-soft">
                             <p>{user.student.classLevel} {user.student.className}</p>
-                            <p className="text-[10px] opacity-60">ID: {user.student.studentNumber}</p>
+                            <p className="mono text-[10px] opacity-60">ID: {user.student.studentNumber}</p>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">N/A</span>
+                          <span className="text-xs text-soft italic">N/A</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => {
                             // Sécurité : Empêcher de supprimer l'admin actuellement connecté
                             const currentAdminId = localStorage.getItem('user_id');
@@ -237,7 +233,7 @@ export default function UserManagement() {
                             }
                             handleDeleteUser(user.id);
                           }}
-                          className="text-slate-400 hover:text-white hover:bg-red-500 rounded-xl transition-all h-10 w-10 shadow-sm hover:shadow-red-200"
+                          className="text-soft hover:text-paper hover:bg-accent transition-colors h-10 w-10"
                           title="Supprimer l'utilisateur"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -254,34 +250,37 @@ export default function UserManagement() {
 
       {/* Create User Modal - Simple Simulation */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <Card className="w-full max-w-lg border-none shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col max-h-[95vh]">
-            <CardHeader className="bg-[#D32D3F] text-white p-6 flex-shrink-0">
-              <CardTitle className="text-2xl font-bold">Créer un nouveau compte</CardTitle>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(17,19,21,.6)' }}>
+          <Card className="w-full max-w-lg bg-paper flex flex-col max-h-[95vh]">
+            <CardHeader className="bg-ink text-paper p-6 flex-shrink-0 flex flex-row items-center justify-between">
+              <CardTitle className="text-2xl font-semibold">Créer un nouveau compte</CardTitle>
+              <button onClick={() => setIsModalOpen(false)} className="text-paper hover:text-accent transition-colors">
+                <X className="w-5 h-5" />
+              </button>
             </CardHeader>
-            <CardContent className="p-8 space-y-6 bg-white overflow-y-auto custom-scrollbar">
+            <CardContent className="p-8 space-y-6 bg-paper overflow-y-auto">
               <form onSubmit={handleCreateUser} className="space-y-6">
                 <div className="space-y-4">
-                  <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest border-b pb-2">Informations Personnelles</p>
+                  <p className="mono text-xs uppercase tracking-widest text-soft border-b border-line pb-2">Informations Personnelles</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500">Prénom</label>
+                      <label className="mono text-xs uppercase tracking-widest text-soft">Prénom</label>
                       <Input placeholder="Prénom" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500">Nom</label>
+                      <label className="mono text-xs uppercase tracking-widest text-soft">Nom</label>
                       <Input placeholder="Nom" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500">Date de Naissance</label>
+                      <label className="mono text-xs uppercase tracking-widest text-soft">Date de Naissance</label>
                       <Input type="date" value={formData.dateOfBirth} onChange={e => setFormData({...formData, dateOfBirth: e.target.value})} />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500">Genre</label>
-                      <select className="w-full h-10 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm" value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
+                      <label className="mono text-xs uppercase tracking-widest text-soft">Genre</label>
+                      <select className="w-full border border-line bg-paper text-sm" value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
                         <option value="M">Masculin</option>
                         <option value="F">Féminin</option>
                       </select>
@@ -290,27 +289,27 @@ export default function UserManagement() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500">Téléphone</label>
+                      <label className="mono text-xs uppercase tracking-widest text-soft">Téléphone</label>
                       <Input placeholder="+509 ..." value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500">Email</label>
+                      <label className="mono text-xs uppercase tracking-widest text-soft">Email</label>
                       <Input type="email" placeholder="email@collegeflambeau.edu" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500">Adresse</label>
+                    <label className="mono text-xs uppercase tracking-widest text-soft">Adresse</label>
                     <Input placeholder="Adresse complète" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest border-b pb-2">Rôle & Accès</p>
+                  <p className="mono text-xs uppercase tracking-widest text-soft border-b border-line pb-2">Rôle & Accès</p>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500">Rôle de l'utilisateur</label>
-                    <select 
-                      className="w-full h-10 px-3 py-2 bg-[#FDE68A]/20 border border-[#FDE68A] rounded-md text-sm font-bold text-slate-800"
+                    <label className="mono text-xs uppercase tracking-widest text-soft">Rôle de l'utilisateur</label>
+                    <select
+                      className="w-full border border-line bg-paper text-sm font-medium text-ink"
                       value={formData.role}
                       onChange={e => setFormData({...formData, role: e.target.value})}
                     >
@@ -322,16 +321,16 @@ export default function UserManagement() {
                   </div>
 
                   {formData.role === 'student' && (
-                    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl space-y-3">
-                        <p className="text-xs font-bold text-amber-700 uppercase tracking-widest flex items-center gap-2">
+                    <div className="p-4 border border-line bg-panel space-y-3">
+                        <p className="mono text-xs uppercase tracking-widest text-accent flex items-center gap-2">
                           <StudentIcon className="w-4 h-4" /> Détails Scolaires
                         </p>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-amber-600 uppercase">Niveau Scolaire</label>
-                            <select 
-                              className="w-full h-10 px-3 py-2 bg-white border border-amber-200 rounded-md text-sm font-semibold"
-                              value={formData.studentData.classLevel} 
+                            <label className="mono text-[10px] uppercase tracking-widest text-soft">Niveau Scolaire</label>
+                            <select
+                              className="w-full border border-line bg-paper text-sm font-medium"
+                              value={formData.studentData.classLevel}
                               onChange={e => setFormData({...formData, studentData: {...formData.studentData, classLevel: e.target.value}})}
                             >
                               <optgroup label="Le Jardin Vert de Cassandre">
@@ -359,7 +358,7 @@ export default function UserManagement() {
                             </select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-amber-600 uppercase">Section / Salle</label>
+                            <label className="mono text-[10px] uppercase tracking-widest text-soft">Section / Salle</label>
                             <Input placeholder="Classe (ex: A)" value={formData.studentData.className} onChange={e => setFormData({...formData, studentData: {...formData.studentData, className: e.target.value}})} />
                           </div>
                         </div>
@@ -367,8 +366,8 @@ export default function UserManagement() {
                   )}
 
                   {formData.role === 'teacher' && (
-                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl space-y-3">
-                        <p className="text-xs font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
+                    <div className="p-4 border border-line bg-panel space-y-3">
+                        <p className="mono text-xs uppercase tracking-widest text-accent flex items-center gap-2">
                           <Shield className="w-4 h-4" /> Détails Professionnels
                         </p>
                         <Input placeholder="Matière enseignée (ex: Mathématiques)" value={formData.teacherData.subject} onChange={e => setFormData({...formData, teacherData: {subject: e.target.value}})} />
@@ -376,8 +375,8 @@ export default function UserManagement() {
                   )}
 
                   {formData.role === 'parent' && (
-                    <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl space-y-3">
-                        <p className="text-xs font-bold text-purple-700 uppercase tracking-widest flex items-center gap-2">
+                    <div className="p-4 border border-line bg-panel space-y-3">
+                        <p className="mono text-xs uppercase tracking-widest text-accent flex items-center gap-2">
                           <User className="w-4 h-4" /> Détails Parentaux
                         </p>
                         <Input placeholder="Occupation (ex: Commerçant)" value={formData.parentData.occupation} onChange={e => setFormData({...formData, parentData: {occupation: e.target.value}})} />
@@ -386,8 +385,8 @@ export default function UserManagement() {
                 </div>
 
                 <div className="flex gap-3 pt-6">
-                  <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1 rounded-xl font-bold h-12">Annuler</Button>
-                  <Button type="submit" className="flex-1 bg-[#D32D3F] hover:bg-[#8B1A26] text-white rounded-xl font-bold h-12 shadow-lg shadow-[#D32D3F]/20">Créer le compte</Button>
+                  <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1 border border-line">Annuler</Button>
+                  <Button type="submit" className="flex-1 bg-accent hover:bg-accent-ink text-paper">Créer le compte</Button>
                 </div>
               </form>
             </CardContent>

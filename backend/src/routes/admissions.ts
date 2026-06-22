@@ -77,6 +77,37 @@ router.post('/', uploadFields, validate(schemas.admission), async (req: Request,
   }
 });
 
+/**
+ * GET /api/admissions/track?email=...
+ * PUBLIC — lets a parent follow their dossier(s) without an account, by deposit email.
+ * Returns only status-relevant fields (no document URLs / internal notes).
+ */
+router.get('/track', async (req: Request, res: Response) => {
+  try {
+    const email = String(req.query.email || '').trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return res.status(400).json({ error: 'Adresse email invalide.' });
+    }
+    const admissions = await prisma.admission.findMany({
+      where: { parentEmail: email },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        studentFirstName: true,
+        studentLastName: true,
+        level: true,
+        status: true,
+        testDate: true,
+        studentNumber: true,
+        createdAt: true,
+      },
+    });
+    return res.json({ count: admissions.length, admissions });
+  } catch (error: any) {
+    console.error('[admissions] track error:', error?.message ?? error);
+    return res.status(500).json({ error: 'Erreur lors de la recherche du dossier.' });
+  }
+});
+
 // Admin-only routes for managing applications.
 router.use(verifyToken, requireRole('admin'));
 
