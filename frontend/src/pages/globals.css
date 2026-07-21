@@ -1,0 +1,259 @@
+/* ============================================================
+   COLLÈGE LE FLAMBEAU — SYSTÈME DE GRILLE (Müller-Brockmann)
+   International Typographic Style / Swiss grid.
+   Principes : ordre objectif, retenue, rythme vertical porteur,
+   flush-left ragged-right, un seul accent, pas de dégradés.
+   ============================================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   SOURCE UNIQUE DE VÉRITÉ — tokens de grille
+   ============================================ */
+:root {
+  /* Grille modulaire */
+  --cols: 12;
+  --bl: 8px;            /* unité baseline */
+  --lh: 24px;          /* leading = 3 × baseline */
+  --gutter: 24px;      /* gouttière entre colonnes */
+  --margin: 32px;      /* marges gauche/droite */
+  --maxw: 1280px;      /* conteneur max */
+
+  /* Encre & papier (palette disciplinée) */
+  --paper: #ffffff;
+  --ink: #111315;       /* texte principal */
+  --soft-ink: #5b6066;  /* texte secondaire */
+  --line: #e6e7e9;      /* filets / bordures */
+  --panel: #f4f5f6;     /* aplat neutre (remplace le cream) */
+
+  /* Accent unique — rouge Le Flambeau */
+  --accent: #C8102E;
+  --accent-ink: #8B1A26; /* état pressé / hover */
+
+  /* Aliases hérités (conservés pour ne rien casser) */
+  --color-red: var(--accent);
+  --color-red-dark: var(--accent-ink);
+  --color-white: var(--paper);
+  --color-gray-dark: var(--ink);
+}
+
+/* ============================================
+   STYLES GLOBAUX
+   ============================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans), 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Conteneur grille : marges symétriques tenues par la grille */
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--margin);
+}
+
+/* Bande pleine largeur portant une grille 12 colonnes */
+.swiss-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  column-gap: var(--gutter);
+  row-gap: var(--lh);
+}
+
+/* ============================================
+   TYPOGRAPHIE — peu de tailles, grands sauts
+   ============================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: inherit; /* inherit so headings on ink panels flip to paper automatically */
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(2.5rem, 6vw, 5rem); }
+h2 { font-size: clamp(2rem, 4vw, 3.5rem); }
+h3 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
+
+p { line-height: 1.5; }
+
+/* Kicker / étiquette technique en monospace capitales */
+.kicker {
+  font-family: var(--font-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+/* Grand numéral porteur de poids visuel */
+.numeral {
+  font-family: var(--font-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Folio / annotation monospace */
+.mono {
+  font-family: var(--font-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Filet réglé, posé sur la baseline */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--ink);
+  height: 0;
+}
+.rule-faint { border-top-color: var(--line); }
+
+/* ============================================
+   BOUTONS — rectangulaires, sans ombre ni scale
+   ============================================ */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-2 text-center font-medium uppercase tracking-wider text-sm;
+  min-height: calc(var(--lh) * 2);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  transition: background-color .15s ease, color .15s ease;
+}
+.btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+
+.btn-accent {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-2 text-center font-medium uppercase tracking-wider text-sm;
+  min-height: calc(var(--lh) * 2);
+  background: var(--accent);
+  color: var(--paper);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  transition: background-color .15s ease;
+}
+.btn-accent:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-2 text-center font-medium uppercase tracking-wider text-sm;
+  min-height: calc(var(--lh) * 2);
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  transition: background-color .15s ease, color .15s ease;
+}
+.btn-secondary:hover { background: var(--ink); color: var(--paper); }
+
+/* ============================================
+   CARTES — bord net, filet 1px, pas d'ombre
+   ============================================ */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--lh);
+}
+
+/* ============================================
+   FORMULAIRES — champs nets sur filet
+   ============================================ */
+input, textarea, select {
+  @apply w-full px-4;
+  min-height: calc(var(--lh) * 2);
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color .15s ease;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+input::placeholder, textarea::placeholder { color: var(--soft-ink); }
+
+/* ============================================
+   FOOTER
+   ============================================ */
+footer {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ============================================
+   ACCESSIBILITÉ
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--panel); }
+::-webkit-scrollbar-thumb { background: var(--ink); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ============================================
+   TOKENS shadcn (composants ui/*) — accordés au système suisse
+   Bord net (radius 0), primaire = encre, accent = rouge, focus = accent.
+   ============================================ */
+@layer base {
+  :root {
+    --background: 1 0 0;
+    --foreground: 0.18 0.004 250;
+    --card: 1 0 0;
+    --card-foreground: 0.18 0.004 250;
+    --popover: 1 0 0;
+    --popover-foreground: 0.18 0.004 250;
+    --primary: 0.18 0.004 250;
+    --primary-foreground: 0.99 0 0;
+    --secondary: 0.96 0.002 250;
+    --secondary-foreground: 0.18 0.004 250;
+    --muted: 0.96 0.002 250;
+    --muted-foreground: 0.46 0.006 250;
+    --destructive: 0.52 0.20 24;
+    --border: 0.92 0.002 250;
+    --input: 0.92 0.002 250;
+    --ring: 0.52 0.20 24;
+    --chart-1: 0.52 0.20 24;
+    --chart-2: 0.18 0.004 250;
+    --chart-3: 0.46 0.006 250;
+    --chart-4: 0.72 0.004 250;
+    --chart-5: 0.86 0.002 250;
+    --radius: 0.5rem; /* bordures légèrement arrondies (demande client) */
+  }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
