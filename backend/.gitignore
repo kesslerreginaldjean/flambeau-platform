@@ -1,0 +1,25 @@
+node_modules/
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Generated
+/src/generated/
+
+# Databases — NEVER commit
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+prisma/*.db
+prisma/dev.db
+
+# Uploads (PII)
+uploads/
+
+# Misc
+*.bak
+*.tmp
